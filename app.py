@@ -15,28 +15,30 @@ if "messages" not in st.session_state:
 
 # チャットボットとやりとりする関数
 def communicate():
-    messages = st.session_state["messages"]
+    if "user_input" in st.session_state and st.session_state["user_input"]:
+        messages = st.session_state["messages"]
 
-    user_message = {"role": "user", "content": st.session_state["user_input"]}
-    messages.append(user_message)
+        user_message = {"role": "user", "content": st.session_state["user_input"]}
+        messages.append(user_message)
 
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4-0125-preview",
-            messages=messages
-        )
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4-0125-preview",
+                messages=messages
+            )
 
-        bot_message_content = response["choices"][0]["message"]["content"] if "content" in response["choices"][0]["message"] else response["choices"][0]["message"]
-        bot_message = {"role": "assistant", "content": bot_message_content}
-        messages.append(bot_message)
+            bot_message_content = response["choices"][0]["message"]["content"] if "content" in response["choices"][0]["message"] else response["choices"][0]["message"]
+            bot_message = {"role": "assistant", "content": bot_message_content}
+            messages.append(bot_message)
 
-    except Exception as e:
-        st.error(f"APIリクエストでエラーが発生しました: {e}")
-        st.write("エラー時のメッセージ履歴:")
-        st.json(messages)  # エラー時のメッセージ履歴を表示
-        return
+        except Exception as e:
+            st.error(f"APIリクエストでエラーが発生しました: {e}")
+            st.write("エラー時のメッセージ履歴:")
+            st.json(messages)
+            return
 
-    st.session_state["user_input"] = ""  # 入力欄を消去
+        st.session_state["user_input"] = ""
+
 
 # ユーザーインターフェイスの構築
 st.title("QUICKFIT BOT")
@@ -64,12 +66,11 @@ if st.session_state.get("messages"):
         messages_container.write(speaker + ": " + content)
 
 # メッセージ入力（改行可能）
-col1, col2 = st.columns([3, 1])  # 3:1の比率で列を分割
-with col1:
-    user_input = st.text_area("メッセージを入力してください。", key="user_input")
-with col2:
-    if st.button("➤"):
-        communicate()
+user_input = st.text_area("メッセージを入力してください。", key="user_input")
+
+# 送信ボタン
+if st.button("➤", key="send_button"):
+    communicate()
 
 # スクロール位置を最新のメッセージに自動調整
 st.markdown(
