@@ -65,9 +65,7 @@ def communicate():
         messages.append(user_message)
         
 
-        # ユーザーが入力したテキストを直ちに表示
-        display_messages([user_message])
-
+        
         # ストリームレスポンス全体の内容を格納する変数
         full_stream_content = ""
         marked = False  # BOTマークを付けたかのフラグ
@@ -106,6 +104,9 @@ def communicate():
 
         # ボットの応答を表示
         display_messages([bot_message])
+        # ユーザーが入力したテキストを直ちに表示
+        display_messages([user_message])
+
 
 # 会話履歴を表示する関数
 def display_messages(messages):
