@@ -20,6 +20,23 @@ def cached_chat(messages):
         st.error("APIリクエストエラー: " + str(e))
         return None
 
+def stream_write(completion, key=None):
+    text = ''
+    for chunk in completion:
+        if 'choices' in chunk and len(chunk['choices']) > 0:
+            message = chunk['choices'][0]['delta']
+            if 'content' in message and message['content']:
+                next_content = message['content']
+            else:
+                # レスポンスが空の場合はこちらのメッセージを使用
+                next_content = "何かお手伝いできることはありますか？"
+        else:
+            next_content = "エラー: 予期しないレスポンス形式"
+        text += next_content
+    return text
+
+
+
 # メッセージ履歴の初期化
 if "messages" not in st.session_state:
     initial_content = str(st.secrets["AppSettings"]["chatbot_setting"])
@@ -52,21 +69,6 @@ if send_button and user_input:
     st.session_state["messages"].append({"role": "assistant", "content": response_text})
     # テキストエリアをクリアする
     st.session_state["user_input"] = ""
-
-def stream_write(completion, key=None):
-    text = ''
-    for chunk in completion:
-        if 'choices' in chunk and len(chunk['choices']) > 0:
-            message = chunk['choices'][0]['delta']
-            if 'content' in message and message['content']:
-                next_content = message['content']
-            else:
-                # レスポンスが空の場合はこちらのメッセージを使用
-                next_content = "何かお手伝いできることはありますか？"
-        else:
-            next_content = "エラー: 予期しないレスポンス形式"
-        text += next_content
-    return text
 
 # カスタムCSSを追加
 st.markdown("""
