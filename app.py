@@ -1,114 +1,130 @@
-import requests
-from typing import TypedDict, Literal
-
-from bs4 import BeautifulSoup
+import streamlit as st
 import openai
-import streamlit
+import json
+from uuid import uuid4  # uuidモジュールからuuid4をインポート
 
-MODELS = ('gpt-3.5-turbo', 'gpt-4')
+# Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
+openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 
-def get_body(url: str) -> str:
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, "html.parser")
-    article = soup.find("article")
-    if article is None:
-        article = soup.find("body")
-    return article.get_text() # type: ignore
-
-class ChatMessage(TypedDict):
-    role: Literal["system", "user", "assistant"]
-    content: str
-
-class Chat:
-    def __init__(
-            self,
-            prompts: list[ChatMessage] = [],
-            model = 'gpt-3.5-turbo',
-            stream=False
-        ) -> None:
-        self.prompts = prompts
-        self.model = model
-        self.stream = stream
-
-    def create(self):
-        return openai.ChatCompletion.create(
-            model=self.model,
-            messages=self.prompts,
-            stream=self.stream,
-        )
-
-
-def summarize_chat(url: str, model):
-    SYSTEM_PROMPT = """
-    与える文章を3行以内で要約し、1行あけて一言だけ意見を述べてください。
-
-    要約と意見の両方とも、ですます調で丁寧な表現を使って出力してください。
-    すべての出力は日本語にしてください。
-    """.strip()
-
-    return Chat(
-        model=model,
-        prompts=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": get_body(url)}
-        ],
-        stream=True
-    )
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
 
 def stream_write(chunks, key=None):
-    result_area = streamlit.empty()
+    result_area = st.empty()
     text = ''
     for chunk in chunks:
-        next: str = chunk['choices'][0]['delta'].get('content', '') # type: ignore
-        text += next
-        if "。" in next:
+        next_content = chunk['choices'][0]['delta'].get('content', '')
+        text += next_content
+        if "。" in next_content:
             text += "\n"
         result_area.write(text, key=key)
     return text
 
-sidebar = streamlit.sidebar.selectbox("Select Mode", ("要約", "チャット"))
-
-if sidebar == "要約":
-    streamlit.title("記事要約")
-
-    model = streamlit.radio("モデル", MODELS, index=0)
-    input_url = streamlit.text_input('URL', placeholder='https://example.com')
-
-    if len(input_url) > 0:
-        chat = summarize_chat(input_url, model)
-        completion = chat.create()
-        main_tab, prompt_tab = streamlit.tabs(["Result", "Prompt"])
-
-        with main_tab:
-            stream_write(completion)
-        with prompt_tab:
-            streamlit.write(chat.prompts)
-
-elif sidebar == "チャット":
-    prompts: list[ChatMessage] = []
-    model = streamlit.radio("モデル", MODELS, index=0)
-    if model is None:
-        streamlit.stop()
-    chat_widget = streamlit.empty()
-
-    @streamlit.cache_data
-    def cached_chat(prompts):
-        chat = Chat(
-            model=model,
-            prompts=prompts,
+# @st.cache_data() デコレータを削除して、キャッシュを使用しない設定に変更
+def cached_chat(messages):
+    try:
+        completion = openai.ChatCompletion.create(
+            model='gpt-4-0125-preview',
+            messages=messages,
             stream=True
         )
-        completion = chat.create()
-        text = stream_write(completion, key=f'output_{prompts}')
-        return text
+        return list(completion)
+    except Exception as e:
+        st.error("APIリクエストエラー: " + str(e))
+        return []
 
-    while True:
-        with chat_widget.container():
-            for prompt in prompts:
-                streamlit.write(prompt['content'])
-            input_text = streamlit.text_input('入力', key=f'input_{prompts}')
-            if len(input_text) == 0:
-                streamlit.stop()
-            prompts.append({"role": "user", "content": input_text})
-            text = cached_chat(prompts)
-            prompts.append({"role": "assistant", "content": text})
+
+# メッセージ履歴の初期化
+if "messages" not in st.session_state:
+    initial_content = str(st.secrets["AppSettings"]["chatbot_setting"])
+    st.session_state["messages"] = [{"role": "system", "content": initial_content}]
+
+# ユーザーインターフェイスの構築
+st.title("QUICKFIT BOT")
+st.write("Quick fitに関するQ&A AIBOT")
+
+# メッセージ表示用のコンテナ
+messages_container = st.container()
+
+# メッセージの表示
+if st.session_state.get("messages"):
+    for message in st.session_state["messages"]:
+        if message["role"] == "system":
+            continue
+        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+        messages_container.write(speaker + ": " + message["content"])
+
+# ユーザー入力テキストボックスの前に、セッション状態でuser_inputを管理
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""
+
+# ユーザー入力テキストボックスの定義
+# 'user_input_text' セッション状態のキーを使用
+if "user_input_text" not in st.session_state:
+    st.session_state.user_input_text = ""
+user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.user_input_text)  # テキストエリアに"メッセージ入力"というラベルを設定
+
+
+# 送信ボタンの定義
+# ボタンが押されたことを検出するためのフラグをセッション状態で管理
+if "is_sending" not in st.session_state:
+    st.session_state.is_sending = False
+
+send_button = st.button("➤", key="send_button", disabled=st.session_state.is_sending)
+
+if send_button and user_input:
+    st.session_state.is_sending = True
+
+    # ユーザーのメッセージをセッション状態に追加
+    st.session_state["messages"].append({"role": "user", "content": user_input})
+    
+    # チャット応答を直接生成し表示
+    completion = cached_chat(st.session_state["messages"])
+    if completion is not None:
+        response_text = stream_write(completion)
+        st.session_state["messages"].append({"role": "assistant", "content": response_text})
+    
+    # テキストエリアの値をクリアし、送信状態をリセット
+    st.session_state.user_input_text = ""
+    st.session_state.is_sending = False
+
+    # メッセージを表示する部分を更新
+    messages_container.empty()
+    for message in st.session_state["messages"]:
+        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+        messages_container.write(speaker + ": " + message["content"])
+
+
+# カスタムCSSを追加
+st.markdown("""
+    <style>
+        .stTextArea > div > div > textarea {
+            height: 50px; /* テキストボックスの高さ調整 */
+            color: blue; /* テキストボックスのテキスト色 */
+        }
+        .stButton > button {
+            height: 50px; /* ボタンの高さ調整 */
+            color: blue; /* ボタンのテキスト色 */
+            background-color: lightgray; /* ボタンの背景色 */
+            vertical-align: low; /* ボタンの垂直方向の配置を中央に調整 */
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Ctrl+Enterで送信するためのJavaScript
+st.markdown("""
+    <script>
+        document.addEventListener("keydown", function(event) {
+            if (event.ctrlKey && event.key === 'Enter') {
+                document.querySelector('.stButton > button').click();
+            }
+        });
+    </script>
+    """, unsafe_allow_html=True)
+
+# スクロール位置を最新のメッセージに自動調整するためのスクリプト
+st.markdown(
+    f"<script>const elements = document.querySelectorAll('.element-container:not(.stButton)');"
+    f"elements[elements.length - 1].scrollIntoView();</script>",
+    unsafe_allow_html=True,
+)
