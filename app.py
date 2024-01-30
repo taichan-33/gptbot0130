@@ -13,6 +13,17 @@ if "messages" not in st.session_state:
         {"role": "system", "content": initial_content}
     ]
 
+def update_messages_container(messages):
+    messages_container.empty()
+    for message in messages:
+        if message["role"] == "system":
+            continue
+        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+        content = message["content"]
+        if not isinstance(content, str):
+            content = str(content)
+        messages_container.write(speaker + ": " + content)
+
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
         user_message = {"role": "user", "content": st.session_state["user_input"]}
