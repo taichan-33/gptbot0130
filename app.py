@@ -68,11 +68,15 @@ if send_button and user_input:
     response_text = stream_write(completion)
     st.session_state["messages"].append({"role": "assistant", "content": response_text})
     
-    # セッション状態の更新をエラーハンドリングで囲む
-    try:
-        st.session_state["user_input"] = ""
-    except Exception as e:
-        st.error(f"セッション状態の更新中にエラーが発生しました: {e}")
+    # ウィジェットキーを更新して入力フィールドをリセット
+    st.session_state["user_input_key"] = str(uuid.uuid4())
+
+# ユーザー入力ウィジェットを動的キーで作成
+user_input_key = st.session_state.get("user_input_key", "user_input")
+user_input = st.text_area("メッセージを入力", key=user_input_key, height=100, placeholder="メッセージを入力してください。")
+
+# 他のコード部分...
+
 
 # メッセージの表示
 if st.session_state.get("messages"):
