@@ -10,7 +10,7 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
 # 新しいキャッシュコマンドを使用
-@st.cache_data(ttl=None, max_entries=None, show_spinner=True, persist=None, experimental_allow_widgets=False)
+@st.cache_data()
 def cached_chat(messages):
     try:
         completion = openai.ChatCompletion.create(
@@ -18,10 +18,11 @@ def cached_chat(messages):
             messages=messages,
             stream=True
         )
-        return completion
+        # ジェネレータをリストに変換
+        return list(completion)
     except Exception as e:
         st.error("APIリクエストエラー: " + str(e))
-        return None
+        return []
 
 def stream_write(completion, key=None):
     text = ''
