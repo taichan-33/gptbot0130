@@ -34,14 +34,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-# 会話履歴を表示する関数
-def display_messages(messages):
-    for message in messages:
-        if message["role"] == "system":
-            continue
-        # ユーザーのメッセージの場合は「🙂YOU:」を、ボットのメッセージの場合は何も付けない
-        speaker = "🙂YOU: " if message["role"] == "user" else ""
-        st.markdown(f"{speaker}{message['content']}\n")  # 空白行を追加
 
 
 # ページ最下部への自動スクロールを行うスクリプト
@@ -105,6 +97,16 @@ def communicate():
         # ボットの応答を表示
         display_messages([bot_message])
 
+# 会話履歴を表示する関数
+def display_messages(messages):
+    for message in messages:
+        if message["role"] == "system":
+            continue
+        # ユーザーのメッセージの場合は「🙂YOU:」を、ボットのメッセージの場合は何も付けない
+        speaker = "🙂YOU: " if message["role"] == "user" else ""
+        st.markdown(f"{speaker}{message['content']}\n")  # 空白行を追加
+
+
 # カスタムCSSを追加
 st.markdown("""
     <style>
@@ -127,7 +129,7 @@ messages_container = st.container()
 stream_placeholder = messages_container.empty()
 
 # メッセージ入力（改行可能）と送信ボタンを横並びに配置
-col1, col2 = st.columns([5, 3], gap="small")
+col1, col2 = st.columns([5, 2], gap="small")
 with col1:
     user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
 with col2:
