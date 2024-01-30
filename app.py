@@ -57,8 +57,12 @@ if st.session_state.get("messages"):
         speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
         messages_container.write(speaker + ": " + message["content"])
 
-# 最初に定義し、デフォルト値を設定
-user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。")
+# ユーザー入力テキストボックスの定義
+# ユーザー入力の初期値をsession_stateで管理
+if "user_input" not in st.session_state:
+    st.session_state["user_input"] = ""
+
+user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state["user_input"])
 
 # 送信ボタンが押された際の処理
 send_button = st.button("➤", key="send_button")
@@ -68,7 +72,7 @@ if send_button and user_input:
     if completion is not None:
         response_text = stream_write(completion)
         st.session_state["messages"].append({"role": "assistant", "content": response_text})
-    # テキストエリアをクリアする
+    # ユーザー入力をクリアするためにsession_stateを更新
     st.session_state["user_input"] = ""
 
 
