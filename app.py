@@ -45,12 +45,17 @@ messages_container = st.container()
 if st.session_state.get("messages"):
     messages = st.session_state["messages"]
 
-     # メッセージをコンテナに表示
     for message in messages[1:]:  # 直近のメッセージを下に表示
         speaker = "🙂"
         if message["role"] == "assistant":
             speaker = "🤖"
-        messages_container.write(speaker + ": " + message["content"])
+        
+        # message["content"] が文字列であることを確認し、文字列でない場合は変換する
+        content = message["content"]
+        if not isinstance(content, str):
+            content = str(content)
+        
+        messages_container.write(speaker + ": " + content)
 
 # メッセージ入力
 user_input = st.text_input("メッセージを入力してください。", key="user_input", on_change=communicate)
