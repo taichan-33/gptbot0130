@@ -62,7 +62,8 @@ if "user_input" not in st.session_state:
 # 'user_input_text' セッション状態のキーを使用
 if "user_input_text" not in st.session_state:
     st.session_state.user_input_text = ""
-user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.user_input_text)
+user_input = st.text_area("メッセージ入力", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.user_input_text)  # テキストエリアに"メッセージ入力"というラベルを設定
+
 
 # 送信ボタンの定義と無効化の実装
 send_button = st.button("➤", key="send_button", disabled=st.session_state.get("is_sending", False))
