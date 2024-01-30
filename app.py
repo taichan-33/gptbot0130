@@ -65,8 +65,17 @@ send_button = st.button("➤", key="send_button")
 if send_button and user_input:
     st.session_state["messages"].append({"role": "user", "content": user_input})
     completion = cached_chat(st.session_state["messages"])
-    response_text = stream_write(completion)
-    st.session_state["messages"].append({"role": "assistant", "content": response_text})
+
+    # completionがNoneでないことを確認
+    if completion is not None:
+        try:
+            response_text = stream_write(completion)
+            st.session_state["messages"].append({"role": "assistant", "content": response_text})
+        except Exception as e:
+            st.error(f"ストリーム処理中にエラーが発生しました: {e}")
+    else:
+        st.error("APIからの応答がNoneです。")
+
     # テキストエリアをクリアする
     st.session_state["user_input"] = ""
 
