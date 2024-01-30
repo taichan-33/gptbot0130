@@ -63,19 +63,50 @@ if st.session_state.get("messages"):
 
         messages_container.write(speaker + ": " + content)
 
-# スクロール位置を最新のメッセージに自動調整するボタン
-if st.button("最新のメッセージにスクロール"):
-    st.markdown(
-        "<script>window.scrollTo(0,document.body.scrollHeight);</script>",
-        unsafe_allow_html=True
-    )
+# メッセージ表示用のコンテナ
+messages_container = st.container()
+with messages_container:
+    for message in reversed(st.session_state["messages"]):
+        if message["role"] == "system":
+            continue
+        speaker = "🙂" if message["role"] == "user" else "🤖"
+        content = message["content"]
+        st.text_area("", value=content, disabled=True, height=70)
+
+# 下へスクロールするためのボタン
+st.markdown("""
+    <a class="scrollToBottom" href="javascript:void(0);" onclick="window.scrollTo(0,document.body.scrollHeight);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <path d="M24 22h-24l12-20z"/>
+        </svg>
+    </a>
+    <style>
+        .scrollToBottom {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            cursor: pointer;
+        }
+        .scrollToBottom svg {
+            fill: #4CAF50;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 # メッセージ入力
-user_input = st.text_area("メッセージを入力してください。", key="user_input", on_change=communicate, height=150)
+user_input = st.text_input("メッセージを入力してください。", key="user_input")
 
-# スクロール位置を最新のメッセージに自動調整
-st.markdown(
-    "<script>const messageBox = document.querySelector('.stTextArea');"
-    "messageBox.scrollIntoView({behavior: 'smooth', block: 'end'});</script>",
-    unsafe_allow_html=True,
-)
+# 送信ボタン
+if st.button('送信'):
+    communicate(user_input)
+    st.session_state["user_input"] = ""  # 入力欄を消去
+
+# 最新のメッセージに自動スクロールするJavaScript
+st.markdown("""
+    <script>
+        const messagesContainer = document.querySelector('.element-container:last-child');
+        if(messagesContainer) {
+            messagesContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+    </script>
+""", unsafe_allow_html=True)
