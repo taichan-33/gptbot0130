@@ -5,17 +5,15 @@ import json
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
 openai.api_key = st.secrets.OpenAIAPI.openai_api_key
 
-# キャッシュされたチャット関数（変更なし）
+# キャッシュされたチャット関数（修正版）
 @st.cache(allow_output_mutation=True)
 def cached_chat(messages):
     try:
-        st.write("送信されるリクエストデータ:", messages)  # リクエストデータを記録
         completion = openai.ChatCompletion.create(
             model='gpt-4-0125-preview',
             messages=messages,
             stream=True,
         )
-        st.write("受け取ったレスポンスデータ:", completion)  # レスポンスデータを記録
         return completion
     except Exception as e:
         st.error("APIリクエストエラー: " + str(e))
@@ -41,15 +39,15 @@ def stream_write(completion, key=None):
     text = ''
     try:
         for chunk in completion:
+            # Check if the necessary keys are in the chunk
             if 'choices' in chunk and len(chunk['choices']) > 0:
                 message = chunk['choices'][0]['message']
                 if 'content' in message:
                     next_content = message['content']
                 else:
-                    next_content = message
+                    next_content = message  # or some default value or error handling
             else:
                 next_content = "エラー: 予期しないレスポンス形式"
-            
             text += next_content
             if "。" in next_content:
                 text += "\n"
@@ -57,14 +55,21 @@ def stream_write(completion, key=None):
         return text
     except Exception as e:
         st.error("エラーが発生しました: " + str(e))
+        # デバッグ情報の表示
         st.write("エラー発生時のリクエストデータ:", st.session_state["messages"])
-        st.write("エラー発生時のレスポンスデータ:", completion)
+        if completion:
+            st.write("エラー発生時のレスポンスデータ:", list(completion))
         return ""
 
-# 送信ボタンが押されたらメッセージを処理
+# 送信ボタンが押された際の処理
 if send_button and user_input:
     st.session_state["messages"].append({"role": "user", "content": user_input})
+    # APIリクエストデータの表示
+    st.write("送信されるリクエストデータ:", st.session_state["messages"])
     completion = cached_chat(st.session_state["messages"])
+    # レスポンスデータの表示
+    if completion:
+        st.write("受け取ったレスポンスデータ:", list(completion))
     response_text = stream_write(completion)
     st.session_state["messages"].append({"role": "assistant", "content": response_text})
     st.session_state["user_input"] = ""
