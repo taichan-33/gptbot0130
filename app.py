@@ -38,7 +38,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 # 会話履歴を表示する関数
 def display_messages(messages):
     for message in messages:
@@ -46,16 +45,9 @@ def display_messages(messages):
             continue
         speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
         st.write(f"{speaker}: {message['content']}")
-    # 会話履歴を更新した直後にスクロール機能を呼び出し
-    scroll_to_bottom()
 
-
-# st.session_stateを使いメッセージのやりとりを保存
-if "messages" not in st.session_state:
-    initial_content = str(st.secrets["AppSettings"]["chatbot_setting"])
-    st.session_state["messages"] = [
-        {"role": "system", "content": initial_content}
-    ]
+# 会話履歴を更新（初回の表示と再実行時の表示）
+display_messages(st.session_state["messages"])
 
 # ページ最下部への自動スクロールを行うスクリプト
 def scroll_to_bottom():
