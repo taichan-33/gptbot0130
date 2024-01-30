@@ -6,6 +6,20 @@ import json
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
 openai.api_key = st.secrets.OpenAIAPI.openai_api_key
 
+# セッション状態でヘッダー情報を保持する
+if 'header' not in st.session_state:
+    # ヘッダー情報をセッション状態に保存
+    st.session_state['header'] = True
+
+def display_header():
+    """ページの最上部にヘッダーを表示する関数"""
+    st.title("QUICKFIT BOT")
+    st.write("Quick fitに関するQ&A AIBOT")
+
+# ヘッダーを表示
+if st.session_state['header']:
+    display_header()
+
 # st.session_stateを使いメッセージのやりとりを保存
 if "messages" not in st.session_state:
     initial_content = str(st.secrets.AppSettings.chatbot_setting)
@@ -13,9 +27,7 @@ if "messages" not in st.session_state:
         {"role": "system", "content": initial_content}
     ]
 
-# ユーザーインターフェイスの構築
-st.title("QUICKFIT BOT")
-st.write("Quick fitに関するQ&A AIBOT")
+
 
 
 # メッセージ表示用のコンテナ
