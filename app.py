@@ -26,7 +26,6 @@ stream_placeholder = messages_container.empty()
 
 # 会話履歴を表示する関数
 def display_messages(messages):
-    messages_container.empty()  # コンテナを一旦空にする
     for message in messages:
         if message["role"] == "system":
             continue
@@ -55,8 +54,8 @@ def communicate():
             # ストリームレスポンスをリアルタイムで表示
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
-                full_stream_content += next_content  # チャンクを結合
-                stream_placeholder.markdown(full_stream_content)  # 結合した内容を表示
+                full_stream_content += next_content
+                stream_placeholder.markdown(full_stream_content)
 
             # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
             bot_message = {"role": "assistant", "content": full_stream_content}
@@ -75,6 +74,7 @@ def communicate():
 
     # 会話履歴を更新
     display_messages(messages)
+
 # カスタムCSSを追加
 st.markdown("""
     <style>
