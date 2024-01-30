@@ -106,7 +106,7 @@ def display_messages(messages):
     for message in messages:
         if message["role"] == "system":
             continue
-        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+        speaker = "🙂YOU" if message["role"] == "user" else ""
         st.markdown(f"{speaker}: {message['content']}\n")  # 空白行を追加
 
 # チャットボットとやりとりする関数
