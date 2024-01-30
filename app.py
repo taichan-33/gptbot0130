@@ -5,8 +5,10 @@ import json
 # StreamlitのカスタムCSSを設定
 st.markdown("""
     <style>
+        /* タイトルのスタイル調整 */
         .title {
             color: white;
+            font-size: 1.75em; /* タイトルのサイズを調整 */
         }
         .title span {
             color: red;
@@ -14,9 +16,11 @@ st.markdown("""
         .title span:nth-of-type(4) {
             color: blue;
         }
-        body {
-            color: white;
-            background-color: #121212;
+
+        /* ダークモードの背景とテキストカラー */
+        body, .stTextInput, .stTextArea, .stSelectbox, .stMultiSelect, .stRadio, .stCheckbox, .stSlider, .css-9e6fub {
+            color: white !important;
+            background-color: #121212 !important;
         }
     </style>
 """, unsafe_allow_html=True)
