@@ -40,7 +40,6 @@ st.markdown(
 )
 # 会話履歴を表示する関数
 def display_messages(messages):
-    messages_placeholder.empty()  # プレースホルダーを一旦空にする
     for message in messages:
         if message["role"] == "system":
             continue
