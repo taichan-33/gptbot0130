@@ -9,6 +9,17 @@ openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
+def stream_write(chunks, key=None):
+    result_area = st.empty()
+    text = ''
+    for chunk in chunks:
+        next_content = chunk['choices'][0]['delta'].get('content', '')
+        text += next_content
+        if "。" in next_content:
+            text += "\n"
+        result_area.write(text, key=key)
+    return text
+
 # @st.cache_data() デコレータを削除して、キャッシュを使用しない設定に変更
 def cached_chat(messages):
     try:
@@ -21,22 +32,6 @@ def cached_chat(messages):
     except Exception as e:
         st.error("APIリクエストエラー: " + str(e))
         return []
-
-def stream_write(completion, key=None):
-    text = ''
-    for chunk in completion:
-        if 'choices' in chunk and len(chunk['choices']) > 0:
-            message = chunk['choices'][0]['delta']
-            if 'content' in message and message['content']:
-                next_content = message['content']
-            else:
-                # レスポンスが空の場合はこちらのメッセージを使用
-                next_content = "何かお手伝いできることはありますか？"
-        else:
-            next_content = "エラー: 予期しないレスポンス形式"
-        text += next_content
-    return text
-
 
 
 # メッセージ履歴の初期化
@@ -69,9 +64,13 @@ if "user_input_text" not in st.session_state:
     st.session_state.user_input_text = ""
 user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.user_input_text)
 
-# 送信ボタンが押された際の処理
-send_button = st.button("➤", key="send_button")
+# 送信ボタンの定義と無効化の実装
+send_button = st.button("➤", key="send_button", disabled=st.session_state.get("is_sending", False))
+
 if send_button and user_input:
+    st.session_state["is_sending"] = True
+    st.experimental_rerun() # ボタンを無効化するためにスクリプトを再実行
+
     # ユーザーのメッセージをセッション状態に追加
     st.session_state["messages"].append({"role": "user", "content": user_input})
     # チャット応答を直接生成し表示
@@ -79,12 +78,11 @@ if send_button and user_input:
     if completion is not None:
         response_text = stream_write(completion)
         st.session_state["messages"].append({"role": "assistant", "content": response_text})
-        # メッセージを即座に表示
-        for message in st.session_state["messages"]:
-            speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-            messages_container.write(speaker + ": " + message["content"])
     # テキストエリアの値をクリアする
     st.session_state.user_input_text = ""
+
+    st.session_state["is_sending"] = False
+    st.experimental_rerun() # ボタンを再度有効化するためにスクリプトを再実行
 
 # カスタムCSSを追加
 st.markdown("""
