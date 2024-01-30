@@ -47,6 +47,14 @@ def scroll_to_bottom():
         unsafe_allow_html=True
     )
 
+# 会話履歴を表示する関数
+def display_messages(messages):
+    for message in messages:
+        if message["role"] == "system":
+            continue
+        speaker = "🙂YOU: " if message["role"] == "user" else ""
+        messages_container.markdown(f"{speaker}{message['content']}\n")  # 空白行を追加
+
 # チャットボットとやりとりする関数
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
@@ -55,12 +63,8 @@ def communicate():
         user_message = {"role": "user", "content": st.session_state["user_input"]}
         messages.append(user_message)
 
-        # ユーザーが入力したテキストを直ちに表示
-        display_messages([user_message])
-
         # ストリームレスポンス全体の内容を格納する変数
         full_stream_content = ""
-        marked = False  # BOTマークを付けたかのフラグ
 
         try:
             # ストリームレスポンスの取得
@@ -73,11 +77,7 @@ def communicate():
             # ストリームレスポンスをリアルタイムで表示
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
-                if not marked and next_content.strip():
-                    next_content = "🤖BOT: " + next_content  # 最初の応答のみにプレフィックスを付ける
-                    marked = True
                 full_stream_content += next_content
-                stream_placeholder.markdown(full_stream_content)
 
             # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
             bot_message = {"role": "assistant", "content": full_stream_content}
@@ -85,27 +85,12 @@ def communicate():
 
         except Exception as e:
             st.error(f"APIリクエストでエラーが発生しました: {e}")
-            st.write("エラー時のメッセージ履歴:")
-            st.json(messages)
+
+        # 会話履歴を更新
+        display_messages(st.session_state["messages"])
 
         # 入力フィールドをクリア
         st.session_state["user_input"] = ""
-
-        # ストリームレスポンスのプレースホルダーをクリア
-        stream_placeholder.empty()
-
-        # ボットの応答を表示
-        display_messages([bot_message])
-
-# 会話履歴を表示する関数
-def display_messages(messages):
-    for message in messages:
-        if message["role"] == "system":
-            continue
-        # ユーザーのメッセージの場合は「🙂YOU:」を、ボットのメッセージの場合は何も付けない
-        speaker = "🙂YOU: " if message["role"] == "user" else ""
-        st.markdown(f"{speaker}{message['content']}\n")  # 空白行を追加
-
 
 # カスタムCSSを追加
 st.markdown("""
