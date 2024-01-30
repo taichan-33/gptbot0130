@@ -76,7 +76,7 @@ st.markdown("""
             height: 50px; /* ボタンの高さ調整 */
             color: blue; /* ボタンのテキスト色 */
             background-color: lightgray; /* ボタンの背景色 */
-            vertical-align: middle; /* ボタンの垂直方向の配置を中央に調整 */
+            vertical-align: low; /* ボタンの垂直方向の配置を中央に調整 */
         }
     </style>
     """, unsafe_allow_html=True)
