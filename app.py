@@ -40,8 +40,21 @@ def display_messages(messages):
         if message["role"] == "system":
             continue
         speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-        st.markdown(f"{speaker}: {message['content']}")
-        st.markdown("---")  # メッセージ間に水平線を挿入
+        st.write(f"{speaker}: {message['content']}")
+
+# 会話履歴を更新（初回の表示と再実行時の表示）
+display_messages(st.session_state["messages"])
+
+# ページ最下部への自動スクロールを行うスクリプト
+def scroll_to_bottom():
+    st.markdown(
+        """
+        <script>
+        window.scrollTo(0, document.body.scrollHeight);
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
 
 # チャットボットとやりとりする関数を修正
 def communicate():
@@ -51,8 +64,8 @@ def communicate():
         user_message = {"role": "user", "content": st.session_state["user_input"]}
         messages.append(user_message)
 
-        # ユーザーが入力したテキストを直ちに表示
-        display_messages([user_message])
+        # // この部分を追加, ユーザー送信後すぐに表示 //
+        display_messages([user_message])  # ユーザーが入力したテキストを直ちに表示
 
         # ストリームレスポンス全体の内容を格納する変数
         full_stream_content = ""
@@ -68,12 +81,64 @@ def communicate():
             # ストリームレスポンスをリアルタイムで表示
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
-                full_stream_content += next_content
                 if next_content.strip():  # 空白でない応答のみ前に「🤖BOT:」を付ける
-                    stream_placeholder.markdown("🤖BOT: " + full_stream_content)
-                    stream_placeholder.markdown("---")  # 応答の後に水平線を挿入
-                else:
-                    stream_placeholder.markdown(full_stream_content)
+                    next_content = "🤖BOT: " + next_content
+                full_stream_content += next_content
+                stream_placeholder.markdown(full_stream_content)
+
+            for chunk in stream_response:
+                next_content = chunk['choices'][0]['delta'].get('content', '')
+                full_stream_content += next_content
+                stream_placeholder.markdown(full_stream_content)
+
+            # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
+            bot_message = {"role": "assistant", "content": full_stream_content}
+            messages.append(bot_message)
+
+        except Exception as e:
+            st.error(f"APIリクエストでエラーが発生しました: {e}")
+            st.write("エラー時のメッセージ履歴:")
+            st.json(messages)
+
+        # 入力フィールドをクリア# 会話履歴を表示する関数
+def display_messages(messages):
+    for message in messages:
+        if message["role"] == "system":
+            continue
+        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+        st.markdown(f"{speaker}: {message['content']}\n")  # 空白行を追加
+
+# チャットボットとやりとりする関数を修正
+def communicate():
+    if "user_input" in st.session_state and st.session_state["user_input"]:
+        messages = st.session_state["messages"]
+
+        user_message = {"role": "user", "content": st.session_state["user_input"]}
+        messages.append(user_message)
+
+        # ユーザーが入力したテキストを直ちに表示
+        display_messages([user_message])
+
+        # ストリームレスポンス全体の内容を格納する変数
+        full_stream_content = ""
+        marked = False  # BOTマークを付けたかのフラグ
+
+        try:
+            # ストリームレスポンスの取得
+            stream_response = openai.ChatCompletion.create(
+                model="gpt-4-0125-preview",
+                messages=messages,
+                stream=True
+            )
+
+            # ストリームレスポンスをリアルタイムで表示
+            for chunk in stream_response:
+                next_content = chunk['choices'][0]['delta'].get('content', '')
+                if not marked and next_content.strip():  # 最初の応答のみ前に「🤖BOT:」を付ける
+                    next_content = "🤖BOT: " + next_content
+                    marked = True
+                full_stream_content += next_content
+                stream_placeholder.markdown(full_stream_content)
 
             # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
             bot_message = {"role": "assistant", "content": full_stream_content}
@@ -92,7 +157,14 @@ def communicate():
 
         # ボットの応答を表示
         display_messages([bot_message])
-        
+        st.session_state["user_input"] = ""
+
+        # ストリームレスポンスのプレースホルダーをクリア
+        stream_placeholder.empty()
+
+        # ボットの応答を表示
+        display_messages([bot_message])
+
 # カスタムCSSを追加
 st.markdown("""
     <style>
