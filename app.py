@@ -5,15 +5,21 @@ import json
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
 openai.api_key = st.secrets.OpenAIAPI.openai_api_key
 
-# キャッシュされたチャット関数
+# キャッシュされたチャット関数（変更なし）
 @st.cache(allow_output_mutation=True)
 def cached_chat(messages):
-    completion = openai.ChatCompletion.create(
-        model='gpt-4-0125-preview',
-        messages=messages,
-        stream=True,
-    )
-    return completion
+    try:
+        st.write("送信されるリクエストデータ:", messages)  # リクエストデータを記録
+        completion = openai.ChatCompletion.create(
+            model='gpt-4-0125-preview',
+            messages=messages,
+            stream=True,
+        )
+        st.write("受け取ったレスポンスデータ:", completion)  # レスポンスデータを記録
+        return completion
+    except Exception as e:
+        st.error("APIリクエストエラー: " + str(e))
+        return None
 
 # メッセージ履歴の初期化
 if "messages" not in st.session_state:
@@ -29,26 +35,31 @@ messages_container = st.container()
 user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
 send_button = st.button("➤", key="send_button")
 
+# リアルタイム出力用の関数（修正版）
 def stream_write(completion, key=None):
     result_area = st.empty()
     text = ''
-    for chunk in completion:
-        # Check if the necessary keys are in the chunk
-        if 'choices' in chunk and len(chunk['choices']) > 0:
-            message = chunk['choices'][0]['message']
-            if 'content' in message:
-                next_content = message['content']
+    try:
+        for chunk in completion:
+            if 'choices' in chunk and len(chunk['choices']) > 0:
+                message = chunk['choices'][0]['message']
+                if 'content' in message:
+                    next_content = message['content']
+                else:
+                    next_content = message
             else:
-                next_content = message  # or some default value or error handling
-        else:
-            next_content = "エラー: 予期しないレスポンス形式"
-        
-        text += next_content
-        if "。" in next_content:
-            text += "\n"
-        result_area.write(text, key=key)
-    return text
-
+                next_content = "エラー: 予期しないレスポンス形式"
+            
+            text += next_content
+            if "。" in next_content:
+                text += "\n"
+            result_area.write(text, key=key)
+        return text
+    except Exception as e:
+        st.error("エラーが発生しました: " + str(e))
+        st.write("エラー発生時のリクエストデータ:", st.session_state["messages"])
+        st.write("エラー発生時のレスポンスデータ:", completion)
+        return ""
 
 # 送信ボタンが押されたらメッセージを処理
 if send_button and user_input:
