@@ -5,33 +5,32 @@ import json
 # StreamlitのカスタムCSSを設定
 st.markdown("""
     <style>
-        /* 全体のスタイルをダークモードに設定 */
-        body {
-            color: #fff;
-            background-color: #121212;
-        }
-        /* Streamlitコンポーネントのカラーを調整 */
-        .stTextInput > div > div > input,
-        .stTextArea > div > div > textarea,
-        .stSelectbox > div > select,
-        .stMultiSelect > div > select,
-        .stRadio > label,
-        .stCheckbox > label,
-        .stSlider > div {
-            color: #fff;
-            background-color: #121212;
-            border-color: #fff;
-        }
-        /* タイトルのスタイル調整 */
+        /* タイトルテキストのスタイルをカスタマイズ */
         h1 {
-            font-size: 8.5rem;
-            color: white !important;
+            font-size: 2.5rem !important; /* タイトルのフォントサイズを調整 */
+            color: white !important; /* タイトルの色を白に設定 */
         }
+        /* 'U' の隣の 'I' の色を赤に設定 */
         h1 span:nth-child(2) {
             color: red !important;
         }
+        /* 'F' の隣の 'I' の色を青に設定 */
         h1 span:nth-child(6) {
             color: blue !important;
+        }
+        /* 背景色と全体のテキストカラーをダークモードに設定 */
+        body {
+            background-color: #121212 !important;
+            color: white !important;
+        }
+        /* Streamlitコンポーネントのカラーを調整 */
+        .stTextInput, .stTextArea, .stSelectbox, .stMultiSelect, .stRadio, .stCheckbox, .stSlider {
+            color: white !important;
+            background-color: #121212 !important;
+        }
+        /* メッセージ表示用のコンテナ */
+        .element-container {
+            background-color: #121212 !important;
         }
     </style>
 """, unsafe_allow_html=True)
