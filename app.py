@@ -9,8 +9,7 @@ openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-# 新しいキャッシュコマンドを使用
-@st.cache_data()
+# @st.cache_data() デコレータを削除して、キャッシュを使用しない設定に変更
 def cached_chat(messages):
     try:
         completion = openai.ChatCompletion.create(
@@ -18,7 +17,6 @@ def cached_chat(messages):
             messages=messages,
             stream=True
         )
-        # ジェネレータをリストに変換
         return list(completion)
     except Exception as e:
         st.error("APIリクエストエラー: " + str(e))
@@ -72,14 +70,16 @@ if "user_input_text" not in st.session_state:
 user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.user_input_text)
 
 # 送信ボタンが押された際の処理
-send_button = st.button("➤", key="send_button")
 if send_button and user_input:
     st.session_state["messages"].append({"role": "user", "content": user_input})
     completion = cached_chat(st.session_state["messages"])
     if completion is not None:
         response_text = stream_write(completion)
         st.session_state["messages"].append({"role": "assistant", "content": response_text})
-    # テキストエリアの値をクリアする
+        # メッセージを即座に表示
+        for message in st.session_state["messages"]:
+            speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+            messages_container.write(speaker + ": " + message["content"])
     st.session_state.user_input_text = ""
 
 # カスタムCSSを追加
