@@ -69,11 +69,11 @@ if st.session_state.get("messages"):
 st.markdown("""
     <style>
         .stTextArea > div > div > textarea {
-            height: 50px; /* テキストボックスの高さ調整 */
+            height: 10px; /* テキストボックスの高さ調整 */
             color: blue; /* テキストボックスのテキスト色 */
         }
         .stButton > button {
-            height: 10px; /* ボタンの高さ調整 */
+            height: 50px; /* ボタンの高さ調整 */
             color: blue; /* ボタンのテキスト色 */
             background-color: lightgray; /* ボタンの背景色 */
         }
