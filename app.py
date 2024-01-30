@@ -22,13 +22,23 @@ def communicate():
         messages.append(user_message)
 
         try:
-            response = openai.ChatCompletion.create(
+            # ストリームレスポンスの取得
+            stream_response = openai.ChatCompletion.create(
                 model="gpt-4-0125-preview",
-                messages=messages
+                messages=messages,
+                stream=True
             )
 
-            bot_message_content = response["choices"][0]["message"]["content"] if "content" in response["choices"][0]["message"] else response["choices"][0]["message"]
-            bot_message = {"role": "assistant", "content": bot_message_content}
+            # 結果を逐次的に表示
+            result_area = st.empty()
+            text = ''
+            for chunk in stream_response:
+                next_content = chunk['choices'][0]['delta'].get('content', '')
+                text += next_content
+                result_area.write(text)
+
+            # 最終的なレスポンスをmessagesに追加
+            bot_message = {"role": "assistant", "content": text}
             messages.append(bot_message)
 
         except Exception as e:
