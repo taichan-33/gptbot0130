@@ -22,23 +22,13 @@ def communicate():
         messages.append(user_message)
 
         try:
-            # ストリームレスポンスの取得
-            stream_response = openai.ChatCompletion.create(
+            response = openai.ChatCompletion.create(
                 model="gpt-4-0125-preview",
-                messages=messages,
-                stream=True
+                messages=messages
             )
 
-            # 結果を逐次的に表示
-            result_area = st.empty()
-            text = ''
-            for chunk in stream_response:
-                next_content = chunk['choices'][0]['delta'].get('content', '')
-                text += next_content
-                result_area.write(text)
-
-            # 最終的なレスポンスをmessagesに追加
-            bot_message = {"role": "assistant", "content": text}
+            bot_message_content = response["choices"][0]["message"]["content"] if "content" in response["choices"][0]["message"] else response["choices"][0]["message"]
+            bot_message = {"role": "assistant", "content": bot_message_content}
             messages.append(bot_message)
 
         except Exception as e:
@@ -94,7 +84,7 @@ st.markdown("""
 # メッセージ入力（改行可能）と送信ボタンを横並びに配置
 col1, col2 = st.columns([5, 1], gap="small")
 with col1:
-    user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。")
+    user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
 with col2:
     send_button = st.button("➤", key="send_button", on_click=communicate)
 
