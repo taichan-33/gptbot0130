@@ -72,6 +72,14 @@ with col1:
 with col2:
     send_button = st.button("➤", key="send_button", on_click=communicate)
 
+
+# メッセージ入力（改行可能）と送信ボタンを横並びに配置
+col1, col2 = st.columns([5, 1], gap="small")
+with col1:
+    user_input = st.text_area("メッセージを入力", value=st.session_state.get("user_input", ""), key="user_input", height=3, placeholder="メッセージを入力してください。")
+with col2:
+    send_button = st.button("➤", key="send_button", on_click=communicate)
+
 # Ctrl+Enterで送信するためのJavaScript
 st.markdown("""
     <script>
@@ -83,14 +91,6 @@ st.markdown("""
         });
     </script>
     """, unsafe_allow_html=True)
-
-# メッセージ入力（改行可能）と送信ボタンを横並びに配置
-col1, col2 = st.columns([5, 1], gap="small")
-with col1:
-    user_input = st.text_area("メッセージを入力", value=st.session_state.get("user_input", ""), key="user_input", height=3, placeholder="メッセージを入力してください。")
-with col2:
-    send_button = st.button("➤", key="send_button", on_click=communicate)
-
 
 # スクロール位置を最新のメッセージに自動調整するためのスクリプト
 st.markdown(
