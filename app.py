@@ -42,13 +42,17 @@ def communicate():
                 stream=True
             )
 
-            # ストリームレスポンスをリアルタイムで表示
+            # ストリームレスポンスを一時的な変数に保存
+            streamed_text = ""
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
-                stream_placeholder.write(next_content)
-            
+                streamed_text += next_content
+
+            # 完全なメッセージをプレースホルダーに書き込む
+            stream_placeholder.write(streamed_text)
+
             # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
-            bot_message = {"role": "assistant", "content": next_content}
+            bot_message = {"role": "assistant", "content": streamed_text}
             messages.append(bot_message)
 
         except Exception as e:
