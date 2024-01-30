@@ -23,6 +23,21 @@ messages_container = st.container()
 # ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
 stream_placeholder = messages_container.empty()
 
+# スクロールを最下部に移動するJavaScript
+st.markdown(
+    """
+    <script>
+    // スクロールをページの最下部に移動する関数
+    function scrollToBottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    // 100ミリ秒後にスクロールを実行
+    setTimeout(scrollToBottom, 100);
+    </script>
+    """,
+    unsafe_allow_html=True
+)
 
 # 会話履歴を表示する関数
 def display_messages(messages):
