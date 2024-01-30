@@ -49,16 +49,6 @@ def communicate():
 
         st.session_state["user_input"] = ""
 
-# UIのメッセージ表示領域を更新する関数
-def update_message_display(messages):
-    messages_container.empty()  # コンテナを一旦空にする
-    for message in messages:
-        if message["role"] == "system":
-            continue
-
-        speaker = "🙂 YOU" if message["role"] == "user" else "🤖 BOT"
-        messages_container.write(f"{speaker}: {message['content']}")
-
 # メッセージを表示する関数
 def display_messages(messages):
     messages_container.empty()  # コンテナを一旦空にする
@@ -80,7 +70,6 @@ def display_messages(messages):
                 messages_container.write(f"🤖 BOT: {complete_message}")
                 complete_message = ""  # 表示した後はリセットする
             messages_container.write(f"🙂 YOU: {message['content']}")
-
 
 # 以下のUI構築コードは変更なし
 # ...
