@@ -39,7 +39,7 @@ def display_messages(messages):
     for message in messages:
         if message["role"] == "system":
             continue
-        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+        speaker = "🙂YOU" if message["role"] == "user" else ""
         st.write(f"{speaker}: {message['content']}")
 
 # 会話履歴を更新（初回の表示と再実行時の表示）
@@ -187,7 +187,7 @@ messages_container = st.container()
 stream_placeholder = messages_container.empty()
 
 # メッセージ入力（改行可能）と送信ボタンを横並びに配置
-col1, col2 = st.columns([5, 1], gap="small")
+col1, col2 = st.columns([4, 2], gap="small")
 with col1:
     user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
 with col2:
