@@ -18,6 +18,10 @@ st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
 
+# メッセージ表示用のコンテナ
+messages_container = st.container()
+# ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
+stream_placeholder = messages_container.empty()
 
 # スクロールを最下部に移動するJavaScript
 st.markdown(
@@ -101,21 +105,14 @@ def communicate():
 
         # ストリームレスポンスのプレースホルダーをクリア
         stream_placeholder.empty()
-
-        # ボットの応答を表示
-        display_messages([bot_message])
+        
         # ユーザーが入力したテキストを直ちに表示
         display_messages([user_message])
 
+        # ボットの応答を表示
+        display_messages([bot_message])
+        
 
-# 会話履歴を表示する関数
-def display_messages(messages):
-    for message in messages:
-        if message["role"] == "system":
-            continue
-        # ユーザーのメッセージの場合は「🙂YOU:」を、ボットのメッセージの場合は何も付けない
-        speaker = "🙂YOU: " if message["role"] == "user" else ""
-        st.markdown(f"{speaker}{message['content']}\n")  # 空白行を追加
 
 
 # カスタムCSSを追加
@@ -134,10 +131,6 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# メッセージ表示用のコンテナ
-messages_container = st.container()
-# ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
-stream_placeholder = messages_container.empty()
 
 # メッセージ入力（改行可能）と送信ボタンを横並びに配置
 col1, col2 = st.columns([5, 2], gap="small")
