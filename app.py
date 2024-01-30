@@ -20,38 +20,36 @@ st.write("Quick fitに関するQ&A AIBOT")
 # メッセージ表示用のコンテナ
 messages_container = st.container()
 
-# チャットボットとやりとりする関数
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
-        messages = st.session_state["messages"]
-
         user_message = {"role": "user", "content": st.session_state["user_input"]}
-        messages.append(user_message)
+        st.session_state["messages"].append(user_message)
 
         try:
             # ストリームレスポンスの取得
             stream_response = openai.ChatCompletion.create(
                 model="gpt-4-0125-preview",
-                messages=messages,
+                messages=st.session_state["messages"],
                 stream=True
             )
 
             # 結果を逐次的にmessagesに追加し、messages_containerを更新
-            for chunk in stream_response:
-                next_content = chunk['choices'][0]['delta'].get('content', '')
-                bot_message = {"role": "assistant", "content": next_content}
-                messages.append(bot_message)
-                update_messages_container(messages)
+            for chunk in stream_response.iter_chunks():
+                if 'choices' in chunk and len(chunk['choices']) > 0:
+                    next_content = chunk['choices'][0].get('message', {}).get('content', '')
+                    bot_message = {"role": "assistant", "content": next_content}
+                    st.session_state["messages"].append(bot_message)
+
+            update_messages_container(st.session_state["messages"])
 
         except Exception as e:
             st.error(f"APIリクエストでエラーが発生しました: {e}")
             st.write("エラー時のメッセージ履歴:")
-            st.json(messages)
+            st.json(st.session_state["messages"])
             return
 
         st.session_state["user_input"] = ""
 
-# メッセージを表示するための関数
 def update_messages_container(messages):
     messages_container.empty()
     for message in messages:
@@ -62,9 +60,6 @@ def update_messages_container(messages):
         if not isinstance(content, str):
             content = str(content)
         messages_container.write(speaker + ": " + content)
-
-# メッセージ表示用のコンテナの定義（他のUI構築コードは変更なし）
-messages_container = st.container()
 
 
 # カスタムCSSを追加
