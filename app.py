@@ -63,12 +63,19 @@ if st.session_state.get("messages"):
 
         messages_container.write(speaker + ": " + content)
 
+# スクロール位置を最新のメッセージに自動調整するボタン
+if st.button("最新のメッセージにスクロール"):
+    st.markdown(
+        "<script>window.scrollTo(0,document.body.scrollHeight);</script>",
+        unsafe_allow_html=True
+    )
+
 # メッセージ入力
-user_input = st.text_input("メッセージを入力してください。", key="user_input", on_change=communicate)
+user_input = st.text_area("メッセージを入力してください。", key="user_input", on_change=communicate, height=150)
 
 # スクロール位置を最新のメッセージに自動調整
 st.markdown(
-    f"<script>const elements = document.querySelectorAll('.element-container:not(.stButton)');"
-    f"elements[elements.length - 1].scrollIntoView();</script>",
+    "<script>const messageBox = document.querySelector('.stTextArea');"
+    "messageBox.scrollIntoView({behavior: 'smooth', block: 'end'});</script>",
     unsafe_allow_html=True,
 )
