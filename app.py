@@ -1,13 +1,23 @@
 import streamlit as st
 import openai
-import json
 from uuid import uuid4  # uuidモジュールからuuid4をインポート
 
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 
+# セッション状態の初期化
 if "messages" not in st.session_state:
-    st.session_state["messages"] = []
+    initial_content = str(st.secrets["AppSettings"]["chatbot_setting"])
+    st.session_state["messages"] = [{"role": "system", "content": initial_content}]
+
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""
+
+if "user_input_text" not in st.session_state:
+    st.session_state.user_input_text = ""
+
+if "is_sending" not in st.session_state:
+    st.session_state.is_sending = False
 
 def stream_write(chunks, key=None):
     result_area = st.empty()
@@ -34,11 +44,6 @@ def cached_chat(messages):
         return []
 
 
-# メッセージ履歴の初期化
-if "messages" not in st.session_state:
-    initial_content = str(st.secrets["AppSettings"]["chatbot_setting"])
-    st.session_state["messages"] = [{"role": "system", "content": initial_content}]
-
 # ユーザーインターフェイスの構築
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
@@ -63,7 +68,6 @@ if "user_input" not in st.session_state:
 if "user_input_text" not in st.session_state:
     st.session_state.user_input_text = ""
 user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.user_input_text)  # テキストエリアに"メッセージ入力"というラベルを設定
-
 
 # 送信ボタンの定義
 # ボタンが押されたことを検出するためのフラグをセッション状態で管理
