@@ -13,6 +13,13 @@ if "messages" not in st.session_state:
         {"role": "system", "content": initial_content}
     ]
 
+# ユーザーインターフェイスの構築
+st.title("QUICKFIT BOT")
+st.write("Quick fitに関するQ&A AIBOT")
+
+# メッセージ表示用のコンテナ
+messages_container = st.container()
+
 # チャットボットとやりとりする関数
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
@@ -29,17 +36,12 @@ def communicate():
                 stream=True
             )
 
-            # 結果を逐次的に表示
-            result_area = st.empty()
-            text = ''
+            # 結果を逐次的にmessagesに追加し、messages_containerを更新
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
-                text += next_content
-                result_area.write(text)
-
-            # 最終的なレスポンスをmessagesに追加
-            bot_message = {"role": "assistant", "content": text}
-            messages.append(bot_message)
+                bot_message = {"role": "assistant", "content": next_content}
+                messages.append(bot_message)
+                update_messages_container(messages)
 
         except Exception as e:
             st.error(f"APIリクエストでエラーが発生しました: {e}")
@@ -49,31 +51,21 @@ def communicate():
 
         st.session_state["user_input"] = ""
 
-
-# ユーザーインターフェイスの構築
-st.title("QUICKFIT BOT")
-st.write("Quick fitに関するQ&A AIBOT")
-
-# メッセージ表示用のコンテナ
-messages_container = st.container()
-
-if st.session_state.get("messages"):
-    messages = st.session_state["messages"]
-
+# メッセージを表示するための関数
+def update_messages_container(messages):
+    messages_container.empty()
     for message in messages:
-        # システムメッセージはスキップする
         if message["role"] == "system":
             continue
-
-        speaker = "🙂YOU"
-        if message["role"] == "assistant":
-            speaker = "🤖BOT"
-
+        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
         content = message["content"]
         if not isinstance(content, str):
             content = str(content)
-
         messages_container.write(speaker + ": " + content)
+
+# メッセージ表示用のコンテナの定義（他のUI構築コードは変更なし）
+messages_container = st.container()
+
 
 # カスタムCSSを追加
 st.markdown("""
