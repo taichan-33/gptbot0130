@@ -20,24 +20,56 @@ st.write("Quick fitに関するQ&A AIBOT")
 # メッセージ表示用のコンテナ
 messages_container = st.container()
 
-# ストリームレスポンス用のプレースホルダーを作成
-stream_placeholder = st.empty()
+# ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
+stream_placeholder = messages_container.empty()
 
+# スクロールを最下部に移動するJavaScript
+st.markdown(
+    """
+    <script>
+    // スクロールをページの最下部に移動する関数
+    function scrollToBottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    // 100ミリ秒後にスクロールを実行
+    setTimeout(scrollToBottom, 100);
+    </script>
+    """,
+    unsafe_allow_html=True
+)
 # 会話履歴を表示する関数
 def display_messages(messages):
     for message in messages:
         if message["role"] == "system":
             continue
         speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-        messages_container.markdown(f"{speaker}: {message['content']}")
+        st.write(f"{speaker}: {message['content']}")
 
-# チャットボットとやりとりする関数
+# 会話履歴を更新（初回の表示と再実行時の表示）
+display_messages(st.session_state["messages"])
+
+# ページ最下部への自動スクロールを行うスクリプト
+def scroll_to_bottom():
+    st.markdown(
+        """
+        <script>
+        window.scrollTo(0, document.body.scrollHeight);
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+
+# チャットボットとやりとりする関数を修正
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
         messages = st.session_state["messages"]
 
         user_message = {"role": "user", "content": st.session_state["user_input"]}
         messages.append(user_message)
+
+        # // この部分を追加, ユーザー送信後すぐに表示 //
+        display_messages([user_message])  # ユーザーが入力したテキストを直ちに表示
 
         # ストリームレスポンス全体の内容を格納する変数
         full_stream_content = ""
@@ -61,11 +93,7 @@ def communicate():
             messages.append(bot_message)
 
         except Exception as e:
-            # エラー内容の詳細化
             st.error(f"APIリクエストでエラーが発生しました: {e}")
-            st.write("エラー詳細:")
-            st.write(f"エラータイプ: {type(e).__name__}")
-            st.write(f"エラーメッセージ: {e.args}")
             st.write("エラー時のメッセージ履歴:")
             st.json(messages)
 
@@ -75,8 +103,8 @@ def communicate():
         # ストリームレスポンスのプレースホルダーをクリア
         stream_placeholder.empty()
 
-    # 会話履歴を更新
-    display_messages(messages)
+        # ボットの応答を表示
+        display_messages([bot_message])
 
 # カスタムCSSを追加
 st.markdown("""
@@ -118,4 +146,3 @@ st.markdown(
     f"elements[elements.length - 1].scrollIntoView();</script>",
     unsafe_allow_html=True,
 )
-
