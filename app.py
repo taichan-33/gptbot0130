@@ -65,7 +65,7 @@ if st.session_state.get("messages"):
 
         messages_container.write(speaker + ": " + content)
 
-# カスタムCSSを追加（両方の高さを揃える）
+# カスタムCSSを追加
 st.markdown("""
     <style>
         .stTextArea > div > div > textarea {
@@ -76,6 +76,7 @@ st.markdown("""
             height: 50px; /* ボタンの高さ調整 */
             color: blue; /* ボタンのテキスト色 */
             background-color: lightgray; /* ボタンの背景色 */
+            vertical-align: middle; /* ボタンの垂直方向の配置を中央に調整 */
         }
     </style>
     """, unsafe_allow_html=True)
