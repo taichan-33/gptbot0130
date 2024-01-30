@@ -68,11 +68,6 @@ def stream_write(completion, key=None):
         text += next_content
     return text
 
-# ユーザー入力ウィジェットを動的キーで作成
-user_input_key = st.session_state.get("user_input_key", "user_input")
-user_input = st.text_area("メッセージを入力", key=user_input_key, height=100, placeholder="メッセージを入力してください。")
-
-
 # カスタムCSSを追加
 st.markdown("""
     <style>
