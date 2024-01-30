@@ -47,6 +47,15 @@ def scroll_to_bottom():
         unsafe_allow_html=True
     )
 
+# 会話履歴を表示する関数
+def display_messages(messages):
+    for message in messages:
+        if message["role"] == "system":
+            continue
+        # ユーザーのメッセージの場合は「🙂YOU:」を、ボットのメッセージの場合は何も付けない
+        speaker = "🙂YOU: " if message["role"] == "user" else ""
+        st.markdown(f"{speaker}{message['content']}\n")  # 空白行を追加
+
 # チャットボットとやりとりする関数
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
