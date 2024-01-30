@@ -107,15 +107,6 @@ def communicate():
         # ボットの応答を表示
         display_messages([bot_message])
 
-# 会話履歴を表示する関数
-def display_messages(messages):
-    for message in messages:
-        if message["role"] == "system":
-            continue
-        # ユーザーのメッセージの場合は「🙂YOU:」を、ボットのメッセージの場合は何も付けない
-        speaker = "🙂YOU: " if message["role"] == "user" else ""
-        st.markdown(f"{speaker}{message['content']}\n")  # 空白行を追加
-
 
 # カスタムCSSを追加
 st.markdown("""
