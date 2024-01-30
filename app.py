@@ -17,14 +17,11 @@ if "messages" not in st.session_state:
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
-# 上半分の空間を作成
-st.empty()
-
-# リアルタイムのストリームレスポンス用のプレースホルダーを中央に作成
-stream_placeholder = st.empty()
-
 # メッセージ表示用のコンテナ
 messages_container = st.container()
+
+# ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
+stream_placeholder = messages_container.empty()
 
 # チャットボットとやりとりする関数
 def communicate():
@@ -46,7 +43,7 @@ def communicate():
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
                 stream_placeholder.write(next_content)
-            
+
             # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
             bot_message = {"role": "assistant", "content": next_content}
             messages.append(bot_message)
@@ -58,6 +55,9 @@ def communicate():
 
         # 入力フィールドをクリア
         st.session_state["user_input"] = ""
+
+        # ストリームレスポンスのプレースホルダーをクリア
+        stream_placeholder.empty()
 
     # 会話履歴を更新
     display_messages(messages)
