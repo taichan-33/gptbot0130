@@ -13,20 +13,7 @@ def cached_chat(messages):
         messages=messages,
         stream=True,
     )
-    text = stream_write(completion, key=f'output_{messages}')
-    return text
-
-# リアルタイム出力用の関数
-def stream_write(completion, key=None):
-    result_area = st.empty()
-    text = ''
-    for chunk in completion:
-        next_content = chunk['choices'][0]['message']['content'] if "content" in chunk['choices'][0]['message'] else chunk['choices'][0]['message']
-        text += next_content
-        if "。" in next_content:
-            text += "\n"
-        result_area.write(text, key=key)
-    return text
+    return completion
 
 # メッセージ履歴の初期化
 if "messages" not in st.session_state:
@@ -42,10 +29,23 @@ messages_container = st.container()
 user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
 send_button = st.button("➤", key="send_button")
 
+# リアルタイム出力用の関数
+def stream_write(completion, key=None):
+    result_area = st.empty()
+    text = ''
+    for chunk in completion:
+        next_content = chunk['choices'][0]['message']['content'] if "content" in chunk['choices'][0]['message'] else chunk['choices'][0]['message']
+        text += next_content
+        if "。" in next_content:
+            text += "\n"
+        result_area.write(text, key=key)
+    return text
+
 # 送信ボタンが押されたらメッセージを処理
 if send_button and user_input:
     st.session_state["messages"].append({"role": "user", "content": user_input})
-    response_text = cached_chat(st.session_state["messages"])
+    completion = cached_chat(st.session_state["messages"])
+    response_text = stream_write(completion)
     st.session_state["messages"].append({"role": "assistant", "content": response_text})
     st.session_state["user_input"] = ""
 
@@ -56,6 +56,7 @@ if st.session_state.get("messages"):
             continue
         speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
         messages_container.write(speaker + ": " + message["content"])
+
 
 # カスタムCSSを追加
 st.markdown("""
