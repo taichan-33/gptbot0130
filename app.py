@@ -65,16 +65,15 @@ if st.session_state.get("messages"):
 
         messages_container.write(speaker + ": " + content)
 
-# カスタムCSSを追加
+# カスタムCSSを追加（両方の高さを揃える）
 st.markdown("""
     <style>
         .stTextArea > div > div > textarea {
-            height: 3rem !important;
+            height: 50px; /* テキストボックスの高さ調整 */
             color: blue; /* テキストボックスのテキスト色 */
         }
         .stButton > button {
-            height: 3rem; /* ボタンの高さ */
-            width: 100%;
+            height: 50px; /* ボタンの高さ調整 */
             color: blue; /* ボタンのテキスト色 */
             background-color: lightgray; /* ボタンの背景色 */
         }
@@ -84,7 +83,7 @@ st.markdown("""
 # メッセージ入力（改行可能）と送信ボタンを横並びに配置
 col1, col2 = st.columns([5, 1], gap="small")
 with col1:
-    user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
+    user_input = st.text_area("メッセージを入力", value=st.session_state.get("user_input", ""), key="user_input", height=3, placeholder="メッセージを入力してください。")
 with col2:
     send_button = st.button("➤", key="send_button", on_click=communicate)
 
