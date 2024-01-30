@@ -1,49 +1,56 @@
+# StreamlitとOpenAIライブラリをインポート
 import streamlit as st
 import openai
-from uuid import uuid4  # uuidモジュールからuuid4をインポート
+import json
 
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
-openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
+openai.api_key = st.secrets.OpenAIAPI.openai_api_key
 
-# セッション状態の初期化
+# st.session_stateを使いメッセージのやりとりを保存
 if "messages" not in st.session_state:
-    initial_content = str(st.secrets["AppSettings"]["chatbot_setting"])
-    st.session_state["messages"] = [{"role": "system", "content": initial_content}]
+    initial_content = str(st.secrets.AppSettings.chatbot_setting)
+    st.session_state["messages"] = [
+        {"role": "system", "content": initial_content}
+    ]
 
-if "user_input" not in st.session_state:
-    st.session_state.user_input = ""
+# チャットボットとやりとりする関数
+def communicate():
+    if "user_input" in st.session_state and st.session_state["user_input"]:
+        messages = st.session_state["messages"]
 
-if "user_input_text" not in st.session_state:
-    st.session_state.user_input_text = ""
+        user_message = {"role": "user", "content": st.session_state["user_input"]}
+        messages.append(user_message)
 
-if "is_sending" not in st.session_state:
-    st.session_state.is_sending = False
+        try:
+            # ストリームレスポンスの取得
+            stream_response = openai.ChatCompletion.create(
+                model="gpt-4-0125-preview",
+                messages=messages,
+                stream=True
+            )
 
-def stream_write(chunks, key=None):
-    result_area = st.empty()
-    text = ''
-    for chunk in chunks:
-        next_content = chunk['choices'][0]['delta'].get('content', '')
-        text += next_content
-        if "。" in next_content:
-            text += "\n"
-        result_area.write(text, key=key)
-    return text
+            # 結果を逐次的に表示
+            result_area = st.empty()
+            text = ''
+            for chunk in stream_response:
+                next_content = chunk['choices'][0]['delta'].get('content', '')
+                text += next_content
+                result_area.write(text)
 
-# @st.cache_data() デコレータを削除して、キャッシュを使用しない設定に変更
-def cached_chat(messages):
-    try:
-        completion = openai.ChatCompletion.create(
-            model='gpt-4-0125-preview',
-            messages=messages,
-            stream=True
-        )
-        return list(completion)
-    except Exception as e:
-        st.error("APIリクエストエラー: " + str(e))
-        return []
+            # 最終的なレスポンスをmessagesに追加
+            bot_message = {"role": "assistant", "content": text}
+            messages.append(bot_message)
 
+        except Exception as e:
+            st.error(f"APIリクエストでエラーが発生しました: {e}")
+            st.write("エラー時のメッセージ履歴:")
+            st.json(messages)
+            return
 
+        st.session_state["user_input"] = ""
+
+# 以下のUI構築コードは変更なし
+# ...
 # ユーザーインターフェイスの構築
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
@@ -51,53 +58,23 @@ st.write("Quick fitに関するQ&A AIBOT")
 # メッセージ表示用のコンテナ
 messages_container = st.container()
 
-# メッセージの表示
 if st.session_state.get("messages"):
-    for message in st.session_state["messages"]:
+    messages = st.session_state["messages"]
+
+    for message in messages:
+        # システムメッセージはスキップする
         if message["role"] == "system":
             continue
-        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-        messages_container.write(speaker + ": " + message["content"])
 
-# ユーザー入力テキストボックスの前に、セッション状態でuser_inputを管理
-if "user_input" not in st.session_state:
-    st.session_state.user_input = ""
+        speaker = "🙂YOU"
+        if message["role"] == "assistant":
+            speaker = "🤖BOT"
 
-# ユーザー入力テキストボックスの定義
-# 'user_input_text' セッション状態のキーを使用
-if "user_input_text" not in st.session_state:
-    st.session_state.user_input_text = ""
-user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.user_input_text)  # テキストエリアに"メッセージ入力"というラベルを設定
+        content = message["content"]
+        if not isinstance(content, str):
+            content = str(content)
 
-# 送信ボタンの定義
-# ボタンが押されたことを検出するためのフラグをセッション状態で管理
-if "is_sending" not in st.session_state:
-    st.session_state.is_sending = False
-
-send_button = st.button("➤", key="send_button", disabled=st.session_state.is_sending)
-
-if send_button and user_input:
-    st.session_state.is_sending = True
-
-    # ユーザーのメッセージをセッション状態に追加
-    st.session_state["messages"].append({"role": "user", "content": user_input})
-    
-    # チャット応答を直接生成し表示
-    completion = cached_chat(st.session_state["messages"])
-    if completion is not None:
-        response_text = stream_write(completion)
-        st.session_state["messages"].append({"role": "assistant", "content": response_text})
-    
-    # テキストエリアの値をクリアし、送信状態をリセット
-    st.session_state.user_input_text = ""
-    st.session_state.is_sending = False
-
-    # メッセージを表示する部分を更新
-    messages_container.empty()
-    for message in st.session_state["messages"]:
-        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-        messages_container.write(speaker + ": " + message["content"])
-
+        messages_container.write(speaker + ": " + content)
 
 # カスタムCSSを追加
 st.markdown("""
@@ -114,6 +91,13 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
+
+# メッセージ入力（改行可能）と送信ボタンを横並びに配置
+col1, col2 = st.columns([5, 1], gap="small")
+with col1:
+    user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
+with col2:
+    send_button = st.button("➤", key="send_button", on_click=communicate)
 
 # Ctrl+Enterで送信するためのJavaScript
 st.markdown("""
