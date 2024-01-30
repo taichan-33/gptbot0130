@@ -63,8 +63,10 @@ if st.session_state.get("messages"):
 
         messages_container.write(speaker + ": " + content)
 
-# メッセージ入力
-user_input = st.text_input("メッセージを入力してください。", key="user_input", on_change=communicate)
+# テキストエリアと送信ボタンを並べて配置
+st.text_area("メッセージを入力してください。", key="user_input", height=100)
+if st.button("➤", key="send_button"):
+    communicate()
 
 # スクロール位置を最新のメッセージに自動調整
 st.markdown(
