@@ -13,7 +13,7 @@ if "messages" not in st.session_state:
         {"role": "system", "content": initial_content}
     ]
 
-# チャットボットとやりとりする関数
+## チャットボットとやりとりする関数
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
         messages = st.session_state["messages"]
@@ -30,16 +30,16 @@ def communicate():
             )
 
             # 結果を逐次的に表示
-            result_area = st.empty()
-            text = ''
             for chunk in stream_response:
+                # 新しいチャンクの内容を取得
                 next_content = chunk['choices'][0]['delta'].get('content', '')
-                text += next_content
-                result_area.write(text)
-
-            # 最終的なレスポンスをmessagesに追加
-            bot_message = {"role": "assistant", "content": text}
-            messages.append(bot_message)
+                # 新しいメッセージをmessagesリストに追加
+                if next_content.strip() != "":  # 空の内容は追加しない
+                    bot_message = {"role": "assistant", "content": next_content}
+                    messages.append(bot_message)
+            
+            # UIのメッセージ表示領域を更新
+            update_message_display(messages)
 
         except Exception as e:
             st.error(f"APIリクエストでエラーが発生しました: {e}")
@@ -48,6 +48,16 @@ def communicate():
             return
 
         st.session_state["user_input"] = ""
+
+# UIのメッセージ表示領域を更新する関数
+def update_message_display(messages):
+    messages_container.empty()  # コンテナを一旦空にする
+    for message in messages:
+        if message["role"] == "system":
+            continue
+
+        speaker = "🙂 YOU" if message["role"] == "user" else "🤖 BOT"
+        messages_container.write(f"{speaker}: {message['content']}")
 
 # 以下のUI構築コードは変更なし
 # ...
