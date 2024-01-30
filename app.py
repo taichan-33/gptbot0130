@@ -65,9 +65,8 @@ if st.session_state.get("messages"):
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""
 
-# 修正されたユーザー入力テキストボックスの定義
-# 更新された st.session_state.user_input の値を使用
-user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.user_input)
+# ユーザー入力テキストボックスの定義
+user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.get("user_input", ""))
 
 # 送信ボタンが押された際の処理
 send_button = st.button("➤", key="send_button")
@@ -77,8 +76,8 @@ if send_button and user_input:
     if completion is not None:
         response_text = stream_write(completion)
         st.session_state["messages"].append({"role": "assistant", "content": response_text})
-        # テキストエリアの値をクリアするためにセッション状態を更新
-        st.session_state.user_input = ""
+    # テキストエリアの値をクリアする
+    st.session_state["user_input"] = ""
 
 
 # カスタムCSSを追加
