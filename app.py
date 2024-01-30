@@ -1,5 +1,6 @@
 import streamlit as st
 import openai
+import uuid  # uuidモジュールをインポート
 import json
 
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
@@ -38,13 +39,13 @@ def stream_write(completion, key=None):
     text = ''
     try:
         for chunk in completion:
-            # Check if the necessary keys are in the chunk
             if 'choices' in chunk and len(chunk['choices']) > 0:
                 message = chunk['choices'][0]['delta']
                 if 'content' in message and message['content']:
                     next_content = message['content']
                 else:
-                    next_content = "エラー: レスポンスに内容がありません"
+                    # エラーメッセージではなく、適切なデフォルトの応答を設定
+                    next_content = "何かお手伝いできることはありますか？"
             else:
                 next_content = "エラー: 予期しないレスポンス形式"
             
@@ -55,11 +56,7 @@ def stream_write(completion, key=None):
         return text
     except Exception as e:
         st.error("エラーが発生しました: " + str(e))
-        st.write("エラー発生時のリクエストデータ:", st.session_state["messages"])
-        if completion:
-            st.write("エラー発生時のレスポンスデータ:", list(completion))
         return ""
-    
 
 # 送信ボタンが押された際の処理
 if send_button and user_input:
