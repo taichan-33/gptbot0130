@@ -6,12 +6,11 @@ from uuid import uuid4  # uuidモジュールからuuid4をインポート
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 
-# 'messages' キーの初期化
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-# キャッシュされたチャット関数（新しいキャッシュコマンドを使用）
-@st.cache_data(allow_output_mutation=True)
+# 新しいキャッシュコマンドを使用
+@st.cache_data(ttl=None, max_entries=None, show_spinner=True, persist=None, experimental_allow_widgets=False)
 def cached_chat(messages):
     try:
         completion = openai.ChatCompletion.create(
