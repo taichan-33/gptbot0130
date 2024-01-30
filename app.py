@@ -26,7 +26,8 @@ def communicate():
 
     # メッセージ履歴を制限（例：最新の5件に限定）
     if len(messages) > 5:
-        messages = messages[-5:]
+        st.session_state["messages"] = messages[-5:]  # ここでsession_stateを更新
+        messages = st.session_state["messages"]
 
     response = openai.ChatCompletion.create(
         model="gpt-4-0125-preview",
@@ -36,7 +37,6 @@ def communicate():
     bot_message = {"role": "assistant", "content": response["choices"][0]["message"]}
     messages.append(bot_message)
 
-    st.session_state["messages"] = messages
     st.session_state["user_input"] = ""  # 入力欄を消去
 
 
