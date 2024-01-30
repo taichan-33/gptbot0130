@@ -84,7 +84,7 @@ st.markdown("""
 # メッセージ入力（改行可能）と送信ボタンを横並びに配置
 col1, col2 = st.columns([5, 1], gap="small")
 with col1:
-    user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
+    user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。")
 with col2:
     send_button = st.button("➤", key="send_button", on_click=communicate)
 
