@@ -48,10 +48,14 @@ if st.session_state.get("messages"):
     messages = st.session_state["messages"]
 
     for message in messages:
+        # システムメッセージはスキップする
+        if message["role"] == "system":
+            continue
+
         speaker = "🙂"
         if message["role"] == "assistant":
             speaker = "🤖"
-        
+
         content = message["content"]
         if not isinstance(content, str):
             content = str(content)
