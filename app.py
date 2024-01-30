@@ -35,7 +35,9 @@ def communicate():
             messages=messages
         )
 
-        bot_message = {"role": "assistant", "content": response["choices"][0]["message"]}
+        # APIからの応答を適切に処理
+        bot_message_content = response["choices"][0]["message"]["content"] if "content" in response["choices"][0]["message"] else response["choices"][0]["message"]
+        bot_message = {"role": "assistant", "content": bot_message_content}
         messages.append(bot_message)
 
     except Exception as e:
