@@ -55,8 +55,6 @@ def communicate():
         user_message = {"role": "user", "content": st.session_state["user_input"]}
         messages.append(user_message)
 
-        # ユーザーが入力したテキストを直ちに表示
-        display_messages([user_message])
 
         # ストリームレスポンス全体の内容を格納する変数
         full_stream_content = ""
