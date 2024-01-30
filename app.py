@@ -13,54 +13,67 @@ if "messages" not in st.session_state:
         {"role": "system", "content": initial_content}
     ]
 
-def update_messages_container(messages):
-    messages_container.empty()
-    for message in messages:
-        if message["role"] == "system":
-            continue
-        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-        content = message["content"]
-        if not isinstance(content, str):
-            content = str(content)
-        messages_container.write(speaker + ": " + content)
-
+# チャットボットとやりとりする関数
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
+        messages = st.session_state["messages"]
+
         user_message = {"role": "user", "content": st.session_state["user_input"]}
-        st.session_state["messages"].append(user_message)
+        messages.append(user_message)
 
         try:
             # ストリームレスポンスの取得
             stream_response = openai.ChatCompletion.create(
                 model="gpt-4-0125-preview",
-                messages=st.session_state["messages"],
+                messages=messages,
                 stream=True
             )
 
-            # 結果を逐次的にmessagesに追加し、messages_containerを更新
+            # 結果を逐次的に表示
+            result_area = st.empty()
+            text = ''
             for chunk in stream_response:
-                if 'choices' in chunk and len(chunk['choices']) > 0:
-                    next_content = chunk['choices'][0].get('message', {}).get('content', '')
-                    bot_message = {"role": "assistant", "content": next_content}
-                    st.session_state["messages"].append(bot_message)
+                next_content = chunk['choices'][0]['delta'].get('content', '')
+                text += next_content
+                result_area.write(text)
 
-            update_messages_container(st.session_state["messages"])
+            # 最終的なレスポンスをmessagesに追加
+            bot_message = {"role": "assistant", "content": text}
+            messages.append(bot_message)
 
         except Exception as e:
             st.error(f"APIリクエストでエラーが発生しました: {e}")
             st.write("エラー時のメッセージ履歴:")
-            st.json(st.session_state["messages"])
+            st.json(messages)
             return
 
         st.session_state["user_input"] = ""
+
 
 # ユーザーインターフェイスの構築
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
-# メッセージ表示用のコンテナの定義
+# メッセージ表示用のコンテナ
 messages_container = st.container()
 
+if st.session_state.get("messages"):
+    messages = st.session_state["messages"]
+
+    for message in messages:
+        # システムメッセージはスキップする
+        if message["role"] == "system":
+            continue
+
+        speaker = "🙂YOU"
+        if message["role"] == "assistant":
+            speaker = "🤖BOT"
+
+        content = message["content"]
+        if not isinstance(content, str):
+            content = str(content)
+
+        messages_container.write(speaker + ": " + content)
 
 # カスタムCSSを追加
 st.markdown("""
