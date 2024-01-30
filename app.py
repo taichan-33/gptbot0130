@@ -73,7 +73,7 @@ st.markdown("""
             color: blue; /* テキストボックスのテキスト色 */
         }
         .stButton > button {
-            height: 50px; /* ボタンの高さ調整 */
+            height: 10px; /* ボタンの高さ調整 */
             color: blue; /* ボタンのテキスト色 */
             background-color: lightgray; /* ボタンの背景色 */
         }
