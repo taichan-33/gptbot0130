@@ -6,8 +6,12 @@ from uuid import uuid4  # uuidモジュールからuuid4をインポート
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 
-# キャッシュされたチャット関数
-@st.cache(allow_output_mutation=True)
+# 'messages' キーの初期化
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+
+# キャッシュされたチャット関数（新しいキャッシュコマンドを使用）
+@st.cache_data(allow_output_mutation=True)
 def cached_chat(messages):
     try:
         completion = openai.ChatCompletion.create(
@@ -72,8 +76,7 @@ if send_button and user_input:
     if completion is not None:
         response_text = stream_write(completion)
         st.session_state["messages"].append({"role": "assistant", "content": response_text})
-    # ユーザー入力をクリアするためにsession_stateを更新
-    st.session_state["user_input"] = ""
+        st.session_state["user_input"] = ""
 
 
 # カスタムCSSを追加
