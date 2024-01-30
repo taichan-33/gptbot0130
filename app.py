@@ -2,38 +2,6 @@ import streamlit as st
 import openai
 import json
 
-# StreamlitのカスタムCSSを設定
-st.markdown("""
-    <style>
-        /* タイトルテキストのスタイルをカスタマイズ */
-        h1 {
-            font-size: 2.5rem !important; /* タイトルのフォントサイズを調整 */
-            color: white !important; /* タイトルの色を白に設定 */
-        }
-        /* 'U' の隣の 'I' の色を赤に設定 */
-        h1 span:nth-child(2) {
-            color: red !important;
-        }
-        /* 'F' の隣の 'I' の色を青に設定 */
-        h1 span:nth-child(6) {
-            color: blue !important;
-        }
-        /* 背景色と全体のテキストカラーをダークモードに設定 */
-        body {
-            background-color: #121212 !important;
-            color: white !important;
-        }
-        /* Streamlitコンポーネントのカラーを調整 */
-        .stTextInput, .stTextArea, .stSelectbox, .stMultiSelect, .stRadio, .stCheckbox, .stSlider {
-            color: white !important;
-            background-color: #121212 !important;
-        }
-        /* メッセージ表示用のコンテナ */
-        .element-container {
-            background-color: #121212 !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
 openai.api_key = st.secrets.OpenAIAPI.openai_api_key
@@ -71,7 +39,7 @@ def communicate():
     st.session_state["user_input"] = ""  # 入力欄を消去
 
 # ユーザーインターフェイスの構築
-st.markdown('<p class="title">QU<span>I</span>CKF<span>I</span>T BOT</p>', unsafe_allow_html=True)
+st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
 # メッセージ表示用のコンテナ
