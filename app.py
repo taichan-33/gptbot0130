@@ -65,27 +65,33 @@ if st.session_state.get("messages"):
 
         messages_container.write(speaker + ": " + content)
 
+# カスタムCSSを追加（両方の高さを揃える）
+st.markdown("""
+    <style>
+        .stTextArea > div > div > textarea {
+            height: 50px; /* テキストボックスの高さ調整 */
+            color: blue; /* テキストボックスのテキスト色 */
+        }
+        .stButton > button {
+            height: 50px; /* ボタンの高さ調整 */
+            color: blue; /* ボタンのテキスト色 */
+            background-color: lightgray; /* ボタンの背景色 */
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
 # メッセージ入力（改行可能）と送信ボタンを横並びに配置
 col1, col2 = st.columns([5, 1], gap="small")
 with col1:
-    st.session_state.user_input = st.text_area("メッセージを入力", value=st.session_state.user_input, key="user_input", height=100, placeholder="メッセージを入力してください。")
-with col2:
-    send_button = st.button("➤", key="send_button", on_click=communicate)
-
-
-# メッセージ入力（改行可能）と送信ボタンを横並びに配置
-col1, col2 = st.columns([5, 1], gap="small")
-with col1:
-    user_input = st.text_area("メッセージを入力", value=st.session_state.get("user_input", ""), key="user_input", height=3, placeholder="メッセージを入力してください。")
+    user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
 with col2:
     send_button = st.button("➤", key="send_button", on_click=communicate)
 
 # Ctrl+Enterで送信するためのJavaScript
 st.markdown("""
     <script>
-        var textarea = document.querySelector('textarea');
-        textarea.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && e.ctrlKey) {
+        document.addEventListener("keydown", function(event) {
+            if (event.ctrlKey && event.key === 'Enter') {
                 document.querySelector('.stButton > button').click();
             }
         });
