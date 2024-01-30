@@ -81,8 +81,11 @@ def communicate():
             # ストリームレスポンスをリアルタイムで表示
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
+                if next_content.strip():  # 空白でない応答のみ前に「🤖BOT:」を付ける
+                    next_content = "🤖BOT: " + next_content
                 full_stream_content += next_content
                 stream_placeholder.markdown(full_stream_content)
+
 
             # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
             bot_message = {"role": "assistant", "content": full_stream_content}
