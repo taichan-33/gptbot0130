@@ -51,23 +51,23 @@ def communicate():
             )
 
             # ストリームレスポンスをリアルタイムで表示
-    for chunk in stream_response:
-        next_content = chunk['choices'][0]['delta'].get('content', '')
-        full_stream_content += next_content
-        stream_placeholder.markdown(full_stream_content)
+            for chunk in stream_response:
+                next_content = chunk['choices'][0]['delta'].get('content', '')
+                full_stream_content += next_content
+                stream_placeholder.markdown(full_stream_content)
 
-    # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
-    bot_message = {"role": "assistant", "content": full_stream_content}
-    messages.append(bot_message)
+            # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
+            bot_message = {"role": "assistant", "content": full_stream_content}
+            messages.append(bot_message)
 
-except Exception as e:
-    # エラー内容の詳細化
-    st.error(f"APIリクエストでエラーが発生しました: {e}")
-    st.write("エラー詳細:")
-    st.write(f"エラータイプ: {type(e).__name__}")
-    st.write(f"エラーメッセージ: {e.args}")
-    st.write("エラー時のメッセージ履歴:")
-    st.json(messages)
+        except Exception as e:
+            # エラー内容の詳細化
+            st.error(f"APIリクエストでエラーが発生しました: {e}")
+            st.write("エラー詳細:")
+            st.write(f"エラータイプ: {type(e).__name__}")
+            st.write(f"エラーメッセージ: {e.args}")
+            st.write("エラー時のメッセージ履歴:")
+            st.json(messages)
 
         # 入力フィールドをクリア
         st.session_state["user_input"] = ""
@@ -77,6 +77,7 @@ except Exception as e:
 
     # 会話履歴を更新
     display_messages(messages)
+
 # カスタムCSSを追加
 st.markdown("""
     <style>
