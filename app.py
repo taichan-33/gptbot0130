@@ -16,15 +16,10 @@ if "messages" not in st.session_state:
 # チャットボットとやりとりする関数
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
-        # メッセージのリストを取得
         messages = st.session_state["messages"]
 
-        # ユーザーからのメッセージをメッセージリストに追加
         user_message = {"role": "user", "content": st.session_state["user_input"]}
         messages.append(user_message)
-
-        # ここでresult_areaを初期化
-        result_area = st.empty()
 
         try:
             # ストリームレスポンスの取得
@@ -34,43 +29,34 @@ def communicate():
                 stream=True
             )
 
-            # ストリームレスポンスを逐次的に表示
+            # 結果を逐次的に表示
+            result_area = st.empty()
+            text = ''
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
-                if next_content.strip():  # 空の内容を除外
-                    # result_areaを更新してストリームレスポンスを表示
-                    result_area.write(next_content)
+                text += next_content
+                result_area.write(text)
 
-            # ストリームが完了したら、最終的なメッセージをmessagesに追加
-            if next_content:
-                bot_message = {"role": "assistant", "content": next_content}
-                messages.append(bot_message)
+            # 最終的なレスポンスをmessagesに追加
+            bot_message = {"role": "assistant", "content": text}
+            messages.append(bot_message)
 
         except Exception as e:
             st.error(f"APIリクエストでエラーが発生しました: {e}")
             st.write("エラー時のメッセージ履歴:")
             st.json(messages)
+            return
 
-        # ユーザー入力フィールドをクリア
         st.session_state["user_input"] = ""
-
-    # メッセージリストを表示
-    display_messages(messages)
-
-# メッセージを表示する関数
-def display_messages(messages):
-    messages_container.empty()  # コンテナを一旦空にする
-    for message in messages:
-        if message["role"] == "system":
-            continue
-        speaker = "🙂 YOU" if message["role"] == "user" else "🤖 BOT"
-        messages_container.write(f"{speaker}: {message['content']}")
 
 # 以下のUI構築コードは変更なし
 # ...
 # ユーザーインターフェイスの構築
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
+
+# リアルタイムのストリームレスポンス用のプレースホルダーをヘッダーの直下に作成
+stream_placeholder = st.empty()
 
 # メッセージ表示用のコンテナ
 messages_container = st.container()
@@ -133,3 +119,4 @@ st.markdown(
     f"elements[elements.length - 1].scrollIntoView();</script>",
     unsafe_allow_html=True,
 )
+
