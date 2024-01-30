@@ -17,7 +17,10 @@ if "messages" not in st.session_state:
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
-# リアルタイムのストリームレスポンス用のプレースホルダーをヘッダーの直下に作成
+# 上半分の空間を作成
+st.empty()
+
+# リアルタイムのストリームレスポンス用のプレースホルダーを中央に作成
 stream_placeholder = st.empty()
 
 # メッセージ表示用のコンテナ
@@ -39,45 +42,34 @@ def communicate():
                 stream=True
             )
 
-            # 結果を逐次的に表示
-            result_area = st.empty()
-            text = ''
+            # ストリームレスポンスをリアルタイムで表示
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
-                text += next_content
-                result_area.write(text)
-
-            # 最終的なレスポンスをmessagesに追加
-            bot_message = {"role": "assistant", "content": text}
+                stream_placeholder.write(next_content)
+            
+            # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
+            bot_message = {"role": "assistant", "content": next_content}
             messages.append(bot_message)
 
         except Exception as e:
             st.error(f"APIリクエストでエラーが発生しました: {e}")
             st.write("エラー時のメッセージ履歴:")
             st.json(messages)
-            return
 
+        # 入力フィールドをクリア
         st.session_state["user_input"] = ""
 
+    # 会話履歴を更新
+    display_messages(messages)
 
-
-if st.session_state.get("messages"):
-    messages = st.session_state["messages"]
-
+# 会話履歴を表示する関数
+def display_messages(messages):
+    messages_container.empty()  # コンテナを一旦空にする
     for message in messages:
-        # システムメッセージはスキップする
         if message["role"] == "system":
             continue
-
-        speaker = "🙂YOU"
-        if message["role"] == "assistant":
-            speaker = "🤖BOT"
-
-        content = message["content"]
-        if not isinstance(content, str):
-            content = str(content)
-
-        messages_container.write(speaker + ": " + content)
+        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+        messages_container.write(f"{speaker}: {message['content']}")
 
 # カスタムCSSを追加
 st.markdown("""
