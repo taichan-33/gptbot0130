@@ -33,7 +33,6 @@ messages_container = st.container()
 user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
 send_button = st.button("➤", key="send_button")
 
-# リアルタイム出力用の関数（修正版）
 def stream_write(completion, key=None):
     result_area = st.empty()
     text = ''
@@ -41,13 +40,14 @@ def stream_write(completion, key=None):
         for chunk in completion:
             # Check if the necessary keys are in the chunk
             if 'choices' in chunk and len(chunk['choices']) > 0:
-                message = chunk['choices'][0]['message']
-                if 'content' in message:
+                message = chunk['choices'][0]['delta']
+                if 'content' in message and message['content']:
                     next_content = message['content']
                 else:
-                    next_content = message  # or some default value or error handling
+                    next_content = "エラー: レスポンスに内容がありません"
             else:
                 next_content = "エラー: 予期しないレスポンス形式"
+            
             text += next_content
             if "。" in next_content:
                 text += "\n"
@@ -55,11 +55,11 @@ def stream_write(completion, key=None):
         return text
     except Exception as e:
         st.error("エラーが発生しました: " + str(e))
-        # デバッグ情報の表示
         st.write("エラー発生時のリクエストデータ:", st.session_state["messages"])
         if completion:
             st.write("エラー発生時のレスポンスデータ:", list(completion))
         return ""
+    
 
 # 送信ボタンが押された際の処理
 if send_button and user_input:
