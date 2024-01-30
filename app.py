@@ -2,6 +2,25 @@ import streamlit as st
 import openai
 import json
 
+# StreamlitのカスタムCSSを設定
+st.markdown("""
+    <style>
+        .title {
+            color: white;
+        }
+        .title span {
+            color: red;
+        }
+        .title span:nth-of-type(4) {
+            color: blue;
+        }
+        body {
+            color: white;
+            background-color: #121212;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
 openai.api_key = st.secrets.OpenAIAPI.openai_api_key
 
@@ -38,7 +57,7 @@ def communicate():
     st.session_state["user_input"] = ""  # 入力欄を消去
 
 # ユーザーインターフェイスの構築
-st.title("QUICKFIT BOT")
+st.markdown('<p class="title">QU<span>I</span>CKF<span>I</span>T BOT</p>', unsafe_allow_html=True)
 st.write("Quick fitに関するQ&A AIBOT")
 
 # メッセージ表示用のコンテナ
