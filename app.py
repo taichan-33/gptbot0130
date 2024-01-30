@@ -38,6 +38,18 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+# ページ最下部への自動スクロールを行うスクリプト
+def scroll_to_bottom():
+    st.markdown(
+        """
+        <script>
+        window.scrollTo(0, document.body.scrollHeight);
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+
 # 会話履歴を表示する関数
 def display_messages(messages):
     for message in messages:
@@ -45,23 +57,25 @@ def display_messages(messages):
             continue
         speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
         st.write(f"{speaker}: {message['content']}")
+    # 会話履歴を更新した直後にスクロール機能を呼び出し
+    scroll_to_bottom()
 
-# 会話履歴を更新（初回の表示と再実行時の表示）
-display_messages(st.session_state["messages"])
 
-# チャットボットとやりとりする関数を修正
+# st.session_stateを使いメッセージのやりとりを保存
+if "messages" not in st.session_state:
+    initial_content = str(st.secrets["AppSettings"]["chatbot_setting"])
+    st.session_state["messages"] = [
+        {"role": "system", "content": initial_content}
+    ]
+
+
+# チャットボットとやりとりする関数
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
         messages = st.session_state["messages"]
 
         user_message = {"role": "user", "content": st.session_state["user_input"]}
         messages.append(user_message)
-
-        # // この部分を追加, ユーザー送信後すぐに表示 //
-        display_messages([user_message])  # ユーザーが入力したテキストを直ちに表示
-
-        # ストリームレスポンス全体の内容を格納する変数
-        full_stream_content = ""
 
         try:
             # ストリームレスポンスの取得
@@ -71,6 +85,7 @@ def communicate():
                 stream=True
             )
 
+            full_stream_content = ""
             # ストリームレスポンスをリアルタイムで表示
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
@@ -92,8 +107,9 @@ def communicate():
         # ストリームレスポンスのプレースホルダーをクリア
         stream_placeholder.empty()
 
-        # ボットの応答を表示
-        display_messages([bot_message])
+        # 直接display_messagesを呼び出して、直ちにユーザーのメッセージとボットの応答を表示
+        # 必要に応じて、もう一度スクロール機能を呼び出す
+        display_messages([user_message, bot_message])
 
 # カスタムCSSを追加
 st.markdown("""
