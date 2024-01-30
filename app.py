@@ -70,8 +70,11 @@ if "user_input_text" not in st.session_state:
 user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=st.session_state.user_input_text)
 
 # 送信ボタンが押された際の処理
+send_button = st.button("➤", key="send_button")
 if send_button and user_input:
+    # ユーザーのメッセージをセッション状態に追加
     st.session_state["messages"].append({"role": "user", "content": user_input})
+    # チャット応答を直接生成し表示
     completion = cached_chat(st.session_state["messages"])
     if completion is not None:
         response_text = stream_write(completion)
@@ -80,6 +83,7 @@ if send_button and user_input:
         for message in st.session_state["messages"]:
             speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
             messages_container.write(speaker + ": " + message["content"])
+    # テキストエリアの値をクリアする
     st.session_state.user_input_text = ""
 
 # カスタムCSSを追加
