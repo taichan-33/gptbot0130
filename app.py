@@ -19,6 +19,34 @@ st.write("Quick fitに関するQ&A AIBOT")
 
 
 
+# スクロールを最下部に移動するJavaScript
+st.markdown(
+    """
+    <script>
+    // スクロールをページの最下部に移動する関数
+    function scrollToBottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    // 100ミリ秒後にスクロールを実行
+    setTimeout(scrollToBottom, 100);
+    </script>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ページ最下部への自動スクロールを行うスクリプト
+def scroll_to_bottom():
+    st.markdown(
+        """
+        <script>
+        window.scrollTo(0, document.body.scrollHeight);
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+
 # 会話履歴を表示する関数
 def display_messages(messages):
     for message in messages:
@@ -78,6 +106,15 @@ def communicate():
 
         # ボットの応答を表示
         display_messages([bot_message])
+
+# 会話履歴を表示する関数
+def display_messages(messages):
+    for message in messages:
+        if message["role"] == "system":
+            continue
+        # ユーザーのメッセージの場合は「🙂YOU:」を、ボットのメッセージの場合は何も付けない
+        speaker = "🙂YOU: " if message["role"] == "user" else ""
+        st.markdown(f"{speaker}{message['content']}\n")  # 空白行を追加
 
 
 # カスタムCSSを追加
