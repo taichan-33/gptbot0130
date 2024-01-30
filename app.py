@@ -64,15 +64,15 @@ def stream_write(completion, key=None):
 # 送信ボタンが押された際の処理
 if send_button and user_input:
     st.session_state["messages"].append({"role": "user", "content": user_input})
-    # APIリクエストデータの表示
-    st.write("送信されるリクエストデータ:", st.session_state["messages"])
     completion = cached_chat(st.session_state["messages"])
-    # レスポンスデータの表示
-    if completion:
-        st.write("受け取ったレスポンスデータ:", list(completion))
     response_text = stream_write(completion)
     st.session_state["messages"].append({"role": "assistant", "content": response_text})
-    st.session_state["user_input"] = ""
+    
+    # セッション状態の更新をエラーハンドリングで囲む
+    try:
+        st.session_state["user_input"] = ""
+    except Exception as e:
+        st.error(f"セッション状態の更新中にエラーが発生しました: {e}")
 
 # メッセージの表示
 if st.session_state.get("messages"):
