@@ -31,6 +31,9 @@ def communicate():
         user_message = {"role": "user", "content": st.session_state["user_input"]}
         messages.append(user_message)
 
+        # ストリームレスポンス全体の内容を格納する変数
+        full_stream_content = ""
+
         try:
             # ストリームレスポンスの取得
             stream_response = openai.ChatCompletion.create(
@@ -42,10 +45,11 @@ def communicate():
             # ストリームレスポンスをリアルタイムで表示
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
-                stream_placeholder.write(next_content)
+                full_stream_content += next_content  # チャンクを結合
+                stream_placeholder.write(full_stream_content)  # 結合した内容を表示
 
             # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
-            bot_message = {"role": "assistant", "content": next_content}
+            bot_message = {"role": "assistant", "content": full_stream_content}
             messages.append(bot_message)
 
         except Exception as e:
