@@ -23,6 +23,20 @@ messages_container = st.container()
 # ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
 stream_placeholder = messages_container.empty()
 
+# 会話履歴を表示する関数
+def display_messages(messages):
+    # 会話履歴の透明度を通常に戻す
+    st.markdown(
+        '<style>#messages-container .element-container { opacity: 1; }</style>',
+        unsafe_allow_html=True
+    )
+    messages_container.empty()  # コンテナを一旦空にする
+    for message in messages:
+        if message["role"] == "system":
+            continue
+        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+        messages_container.markdown(f"{speaker}: {message['content']}")
+
 # チャットボットとやりとりする関数
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
@@ -42,11 +56,17 @@ def communicate():
                 stream=True
             )
 
+            # 会話履歴の透明度を下げる
+            st.markdown(
+                '<style>#messages-container .element-container { opacity: 0.5; }</style>',
+                unsafe_allow_html=True
+            )
+
             # ストリームレスポンスをリアルタイムで表示
             for chunk in stream_response:
                 next_content = chunk['choices'][0]['delta'].get('content', '')
                 full_stream_content += next_content  # チャンクを結合
-                stream_placeholder.write(full_stream_content)  # 結合した内容を表示
+                stream_placeholder.markdown(full_stream_content)  # 結合した内容を表示
 
             # ストリームが完了したら、最終的なメッセージをmessagesに追加して表示
             bot_message = {"role": "assistant", "content": full_stream_content}
@@ -65,15 +85,6 @@ def communicate():
 
     # 会話履歴を更新
     display_messages(messages)
-
-# 会話履歴を表示する関数
-def display_messages(messages):
-    messages_container.empty()  # コンテナを一旦空にする
-    for message in messages:
-        if message["role"] == "system":
-            continue
-        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-        messages_container.write(f"{speaker}: {message['content']}")
 
 # カスタムCSSを追加
 st.markdown("""
