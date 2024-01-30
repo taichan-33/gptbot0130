@@ -59,6 +59,29 @@ def update_message_display(messages):
         speaker = "🙂 YOU" if message["role"] == "user" else "🤖 BOT"
         messages_container.write(f"{speaker}: {message['content']}")
 
+# メッセージを表示する関数
+def display_messages(messages):
+    messages_container.empty()  # コンテナを一旦空にする
+    complete_message = ""
+    for message in messages:
+        if message["role"] == "system":
+            continue
+
+        if message["role"] == "assistant":
+            # 現在のメッセージを直前のメッセージに連結する
+            complete_message += message["content"]
+            # 文末がピリオド、クエスチョンマーク、エクスクラメーションマークなら表示する
+            if complete_message.endswith(('.', '?', '!', '。', '？', '！')):
+                messages_container.write(f"🤖 BOT: {complete_message}")
+                complete_message = ""  # 表示した後はリセットする
+        else:
+            # ユーザーのメッセージはそのまま表示
+            if complete_message:  # BOTのメッセージが完了していない場合は表示する
+                messages_container.write(f"🤖 BOT: {complete_message}")
+                complete_message = ""  # 表示した後はリセットする
+            messages_container.write(f"🙂 YOU: {message['content']}")
+
+
 # 以下のUI構築コードは変更なし
 # ...
 # ユーザーインターフェイスの構築
