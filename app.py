@@ -57,27 +57,21 @@ if st.session_state.get("messages"):
         speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
         messages_container.write(speaker + ": " + message["content"])
 
-# ユーザー入力テキストボックス
-user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。")
-
 # 送信ボタンが押された際の処理
 send_button = st.button("➤", key="send_button")
 if send_button and user_input:
     st.session_state["messages"].append({"role": "user", "content": user_input})
     completion = cached_chat(st.session_state["messages"])
+    response_text = stream_write(completion)
+    st.session_state["messages"].append({"role": "assistant", "content": response_text})
+    
+    # テキストエリアをクリアする代わりに、直接ウィジェットの値を空にする
+    user_input = ""
 
-    # completionがNoneでないことを確認
-    if completion is not None:
-        try:
-            response_text = stream_write(completion)
-            st.session_state["messages"].append({"role": "assistant", "content": response_text})
-        except Exception as e:
-            st.error(f"ストリーム処理中にエラーが発生しました: {e}")
-    else:
-        st.error("APIからの応答がNoneです。")
+# ユーザー入力テキストボックス
+# `value` 引数に `user_input` を使用する
+user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。", value=user_input)
 
-    # テキストエリアをクリアする
-    st.session_state["user_input"] = ""
 
 # カスタムCSSを追加
 st.markdown("""
