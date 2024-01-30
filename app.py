@@ -13,13 +13,6 @@ if "messages" not in st.session_state:
         {"role": "system", "content": initial_content}
     ]
 
-# ユーザーインターフェイスの構築
-st.title("QUICKFIT BOT")
-st.write("Quick fitに関するQ&A AIBOT")
-
-# メッセージ表示用のコンテナ
-messages_container = st.container()
-
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
         user_message = {"role": "user", "content": st.session_state["user_input"]}
@@ -34,7 +27,7 @@ def communicate():
             )
 
             # 結果を逐次的にmessagesに追加し、messages_containerを更新
-            for chunk in stream_response.iter_chunks():
+            for chunk in stream_response:
                 if 'choices' in chunk and len(chunk['choices']) > 0:
                     next_content = chunk['choices'][0].get('message', {}).get('content', '')
                     bot_message = {"role": "assistant", "content": next_content}
@@ -50,16 +43,12 @@ def communicate():
 
         st.session_state["user_input"] = ""
 
-def update_messages_container(messages):
-    messages_container.empty()
-    for message in messages:
-        if message["role"] == "system":
-            continue
-        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-        content = message["content"]
-        if not isinstance(content, str):
-            content = str(content)
-        messages_container.write(speaker + ": " + content)
+# ユーザーインターフェイスの構築
+st.title("QUICKFIT BOT")
+st.write("Quick fitに関するQ&A AIBOT")
+
+# メッセージ表示用のコンテナの定義
+messages_container = st.container()
 
 
 # カスタムCSSを追加
