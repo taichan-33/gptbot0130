@@ -1,6 +1,7 @@
 
 import streamlit as st
 import openai
+import json
 
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
 openai.api_key = st.secrets.OpenAIAPI.openai_api_key
@@ -45,15 +46,23 @@ messages_container = st.container()
 if st.session_state.get("messages"):
     messages = st.session_state["messages"]
 
-    for message in messages[1:]:  # 直近のメッセージを下に表示
+    for message in messages[1:]:
         speaker = "🙂"
         if message["role"] == "assistant":
             speaker = "🤖"
         
-        # message["content"] が文字列であることを確認し、文字列でない場合は変換する
         content = message["content"]
         if not isinstance(content, str):
             content = str(content)
+
+        # JSON形式の文字列をデコード
+        try:
+            decoded_content = json.loads(content)
+            if "content" in decoded_content:
+                content = decoded_content["content"]
+        except json.JSONDecodeError:
+            # JSON形式でない場合はそのまま使用
+            pass
         
         messages_container.write(speaker + ": " + content)
 
