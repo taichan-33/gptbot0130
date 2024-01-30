@@ -20,8 +20,7 @@ st.write("Quick fitに関するQ&A AIBOT")
 # メッセージ表示用のコンテナ
 messages_container = st.container()
 
-# ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
-stream_placeholder = messages_container.empty()
+
 
 # スクロールを最下部に移動するJavaScript
 st.markdown(
@@ -121,6 +120,9 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
+
+# ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
+stream_placeholder = messages_container.empty()
 
 # メッセージ入力（改行可能）と送信ボタンを横並びに配置
 col1, col2 = st.columns([5, 1], gap="small")
