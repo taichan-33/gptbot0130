@@ -17,9 +17,6 @@ if "messages" not in st.session_state:
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
-# メッセージ表示用のコンテナ
-messages_container = st.container()
-
 
 
 # スクロールを最下部に移動するJavaScript
@@ -121,6 +118,8 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# メッセージ表示用のコンテナ
+messages_container = st.container()
 # ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
 stream_placeholder = messages_container.empty()
 
