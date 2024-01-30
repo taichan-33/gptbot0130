@@ -24,7 +24,7 @@ st.markdown("""
         }
         /* タイトルのスタイル調整 */
         h1 {
-            font-size: 2.5rem;
+            font-size: 8.5rem;
             color: white !important;
         }
         h1 span:nth-child(2) {
