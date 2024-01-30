@@ -1,4 +1,3 @@
-
 import streamlit as st
 import openai
 import json
@@ -8,14 +7,10 @@ openai.api_key = st.secrets.OpenAIAPI.openai_api_key
 
 # st.session_stateを使いメッセージのやりとりを保存
 if "messages" not in st.session_state:
-    # st.secrets.AppSettings.chatbot_setting が文字列であることを確認
     initial_content = str(st.secrets.AppSettings.chatbot_setting)
     st.session_state["messages"] = [
         {"role": "system", "content": initial_content}
     ]
-
-# その他のコード...
-
 
 # チャットボットとやりとりする関数
 def communicate():
@@ -24,18 +19,12 @@ def communicate():
     user_message = {"role": "user", "content": st.session_state["user_input"]}
     messages.append(user_message)
 
-    # メッセージ履歴を制限（例：最新の5件に限定）
-    if len(messages) > 5:
-        st.session_state["messages"] = messages[-5:]
-        messages = st.session_state["messages"]
-
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4-0125-preview",
             messages=messages
         )
 
-        # APIからの応答を適切に処理
         bot_message_content = response["choices"][0]["message"]["content"] if "content" in response["choices"][0]["message"] else response["choices"][0]["message"]
         bot_message = {"role": "assistant", "content": bot_message_content}
         messages.append(bot_message)
@@ -48,7 +37,6 @@ def communicate():
 
     st.session_state["user_input"] = ""  # 入力欄を消去
 
-
 # ユーザーインターフェイスの構築
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
@@ -59,7 +47,7 @@ messages_container = st.container()
 if st.session_state.get("messages"):
     messages = st.session_state["messages"]
 
-    for message in messages[1:]:
+    for message in messages:
         speaker = "🙂"
         if message["role"] == "assistant":
             speaker = "🤖"
@@ -68,24 +56,14 @@ if st.session_state.get("messages"):
         if not isinstance(content, str):
             content = str(content)
 
-        # JSON形式の文字列をデコード
-        try:
-            decoded_content = json.loads(content)
-            if "content" in decoded_content:
-                content = decoded_content["content"]
-        except json.JSONDecodeError:
-            # JSON形式でない場合はそのまま使用
-            pass
-        
         messages_container.write(speaker + ": " + content)
 
 # メッセージ入力
 user_input = st.text_input("メッセージを入力してください。", key="user_input", on_change=communicate)
 
 # スクロール位置を最新のメッセージに自動調整
-if st.session_state.get("messages"):
-    st.markdown(
-        f"<script>const elements = document.querySelectorAll('.element-container:not(.stButton)');"
-        f"elements[elements.length - 1].scrollIntoView();</script>",
-        unsafe_allow_html=True,
-    )
+st.markdown(
+    f"<script>const elements = document.querySelectorAll('.element-container:not(.stButton)');"
+    f"elements[elements.length - 1].scrollIntoView();</script>",
+    unsafe_allow_html=True,
+)
