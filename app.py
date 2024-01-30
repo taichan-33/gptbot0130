@@ -23,19 +23,6 @@ messages_container = st.container()
 # ストリームレスポンス用のプレースホルダーをメッセージ表示コンテナ内に作成
 stream_placeholder = messages_container.empty()
 
-# 会話履歴を表示する関数
-def display_messages(messages):
-    # 会話履歴の透明度を通常に戻す
-    st.markdown(
-        '<style>#messages-container .element-container { opacity: 1; }</style>',
-        unsafe_allow_html=True
-    )
-    messages_container.empty()  # コンテナを一旦空にする
-    for message in messages:
-        if message["role"] == "system":
-            continue
-        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-        messages_container.markdown(f"{speaker}: {message['content']}")
 
 # チャットボットとやりとりする関数
 def communicate():
@@ -85,6 +72,20 @@ def communicate():
 
     # 会話履歴を更新
     display_messages(messages)
+
+# 会話履歴を表示する関数
+def display_messages(messages):
+    # 会話履歴の透明度を通常に戻す
+    st.markdown(
+        '<style>#messages-container .element-container { opacity: 1; }</style>',
+        unsafe_allow_html=True
+    )
+    messages_container.empty()  # コンテナを一旦空にする
+    for message in messages:
+        if message["role"] == "system":
+            continue
+        speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
+        messages_container.markdown(f"{speaker}: {message['content']}")
 
 # カスタムCSSを追加
 st.markdown("""
