@@ -1,19 +1,19 @@
 import streamlit as st
 import openai
-import uuid  # uuidモジュールをインポート
 import json
+from uuid import uuid4  # uuidモジュールからuuid4をインポート
 
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
-openai.api_key = st.secrets.OpenAIAPI.openai_api_key
+openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 
-# キャッシュされたチャット関数（修正版）
+# キャッシュされたチャット関数
 @st.cache(allow_output_mutation=True)
 def cached_chat(messages):
     try:
         completion = openai.ChatCompletion.create(
             model='gpt-4-0125-preview',
             messages=messages,
-            stream=True,
+            stream=True
         )
         return completion
     except Exception as e:
@@ -22,7 +22,7 @@ def cached_chat(messages):
 
 # メッセージ履歴の初期化
 if "messages" not in st.session_state:
-    initial_content = str(st.secrets.AppSettings.chatbot_setting)
+    initial_content = str(st.secrets["AppSettings"]["chatbot_setting"])
     st.session_state["messages"] = [{"role": "system", "content": initial_content}]
 
 # ユーザーインターフェイスの構築
@@ -31,49 +31,6 @@ st.write("Quick fitに関するQ&A AIBOT")
 
 # メッセージ表示用のコンテナ
 messages_container = st.container()
-user_input = st.text_area("メッセージを入力", key="user_input", height=100, placeholder="メッセージを入力してください。")
-send_button = st.button("➤", key="send_button")
-
-def stream_write(completion, key=None):
-    result_area = st.empty()
-    text = ''
-    try:
-        for chunk in completion:
-            if 'choices' in chunk and len(chunk['choices']) > 0:
-                message = chunk['choices'][0]['delta']
-                if 'content' in message and message['content']:
-                    next_content = message['content']
-                else:
-                    # エラーメッセージではなく、適切なデフォルトの応答を設定
-                    next_content = "何かお手伝いできることはありますか？"
-            else:
-                next_content = "エラー: 予期しないレスポンス形式"
-            
-            text += next_content
-            if "。" in next_content:
-                text += "\n"
-            result_area.write(text, key=key)
-        return text
-    except Exception as e:
-        st.error("エラーが発生しました: " + str(e))
-        return ""
-
-# 送信ボタンが押された際の処理
-if send_button and user_input:
-    st.session_state["messages"].append({"role": "user", "content": user_input})
-    completion = cached_chat(st.session_state["messages"])
-    response_text = stream_write(completion)
-    st.session_state["messages"].append({"role": "assistant", "content": response_text})
-    
-    # ウィジェットキーを更新して入力フィールドをリセット
-    st.session_state["user_input_key"] = str(uuid.uuid4())
-
-# ユーザー入力ウィジェットを動的キーで作成
-user_input_key = st.session_state.get("user_input_key", "user_input")
-user_input = st.text_area("メッセージを入力", key=user_input_key, height=100, placeholder="メッセージを入力してください。")
-
-# 他のコード部分...
-
 
 # メッセージの表示
 if st.session_state.get("messages"):
@@ -82,6 +39,38 @@ if st.session_state.get("messages"):
             continue
         speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
         messages_container.write(speaker + ": " + message["content"])
+
+# ユーザー入力テキストボックス
+user_input = st.text_area("", key="user_input", height=100, placeholder="メッセージを入力してください。")
+
+# 送信ボタンが押された際の処理
+send_button = st.button("➤", key="send_button")
+if send_button and user_input:
+    st.session_state["messages"].append({"role": "user", "content": user_input})
+    completion = cached_chat(st.session_state["messages"])
+    response_text = stream_write(completion)
+    st.session_state["messages"].append({"role": "assistant", "content": response_text})
+    # テキストエリアをクリアする
+    st.session_state["user_input"] = ""
+
+def stream_write(completion, key=None):
+    text = ''
+    for chunk in completion:
+        if 'choices' in chunk and len(chunk['choices']) > 0:
+            message = chunk['choices'][0]['delta']
+            if 'content' in message and message['content']:
+                next_content = message['content']
+            else:
+                # レスポンスが空の場合はこちらのメッセージを使用
+                next_content = "何かお手伝いできることはありますか？"
+        else:
+            next_content = "エラー: 予期しないレスポンス形式"
+        text += next_content
+    return text
+
+# ユーザー入力ウィジェットを動的キーで作成
+user_input_key = st.session_state.get("user_input_key", "user_input")
+user_input = st.text_area("メッセージを入力", key=user_input_key, height=100, placeholder="メッセージを入力してください。")
 
 
 # カスタムCSSを追加
