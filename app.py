@@ -38,22 +38,28 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 # 会話履歴を表示する関数
 def display_messages(messages):
+    messages_placeholder.empty()  # プレースホルダーを一旦空にする
     for message in messages:
         if message["role"] == "system":
             continue
         speaker = "🙂YOU" if message["role"] == "user" else "🤖BOT"
-        messages_container.markdown(f"{speaker}: {message['content']}")
+        st.write(f"{speaker}: {message['content']}")
 
-# チャットボットとやりとりする関数
+# 会話履歴を更新（初回の表示と再実行時の表示）
+display_messages(st.session_state["messages"])
+
+# チャットボットとやりとりする関数を修正
 def communicate():
     if "user_input" in st.session_state and st.session_state["user_input"]:
         messages = st.session_state["messages"]
 
         user_message = {"role": "user", "content": st.session_state["user_input"]}
         messages.append(user_message)
+
+        # // この部分を追加, ユーザー送信後すぐに表示 //
+        display_messages([user_message])  # ユーザーが入力したテキストを直ちに表示
 
         # ストリームレスポンス全体の内容を格納する変数
         full_stream_content = ""
@@ -87,8 +93,8 @@ def communicate():
         # ストリームレスポンスのプレースホルダーをクリア
         stream_placeholder.empty()
 
-    # 会話履歴を更新
-    display_messages(messages)
+        # ボットの応答を表示
+        display_messages([bot_message])
 
 # カスタムCSSを追加
 st.markdown("""
