@@ -1,66 +1,65 @@
-import streamlit as st
+import os
 import openai
-import traceback
+import streamlit as st
 
 # OpenAI APIキーの設定
-try:
-    openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
-except Exception as e:
-    st.error(f"OpenAI APIキーの設定に失敗しました: {e}")
-    st.error(traceback.format_exc())  # スタックトレースの表示
+openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
-try:
-    # メッセージ履歴の初期化と初期プロンプトの設定
-    if "messages" not in st.session_state:
-        initial_prompt = str(st.secrets["AppSettings"]["initial_prompt"])
-        st.session_state["messages"] = [{"role": "system", "content": initial_prompt}]
+# 定数定義
+USER_NAME = "user"
+ASSISTANT_NAME = "assistant"
 
-    # チャットログを保存したセッション情報を初期化
-    if "chat_log" not in st.session_state:
-        st.session_state["chat_log"] = []
+# OpenAIクライアントの初期化
+client = openai.ChatCompletion()
 
-    user_msg = st.chat_input("ここにメッセージを入力")
-    if user_msg:
-        # ユーザーのメッセージをセッションのチャットログに追加
-        st.session_state["messages"].append({"role": "user", "content": user_msg})
-        st.session_state["chat_log"].append({"name": "user", "msg": user_msg})
+def response_chatgpt(user_msg: str):
+    """ChatGPTのレスポンスを取得
 
-        # OpenAIからの応答を取得
-        response_gen = openai.ChatCompletion.create(
-            model="gpt-4-0125-preview",
-            messages=st.session_state["messages"],
-            stream=True
-        )
+    Args:
+        user_msg (str): ユーザーメッセージ。
+    """
+    response = client.create(
+        model="gpt-4-0125-preview",
+        messages=[{"role": "user", "content": user_msg}],
+        stream=True,
+    )
+    return response
 
-        # アシスタントのメッセージを逐次表示
-        assistant_response_area = st.empty()
+# メッセージ履歴の初期化と初期プロンプトの設定
+if "messages" not in st.session_state:
+    initial_prompt = str(st.secrets["AppSettings"]["initial_prompt"])
+    st.session_state["messages"] = [{"role": "system", "content": initial_prompt}]
+
+# チャットログを保存したセッション情報を初期化
+if "chat_log" not in st.session_state:
+    st.session_state.chat_log = []
+
+user_msg = st.chat_input("ここにメッセージを入力")
+if user_msg:
+    # 以前のチャットログを表示
+    for chat in st.session_state.chat_log:
+        with st.chat_message(chat["name"]):
+            st.write(chat["msg"])
+
+    # 最新のメッセージを表示
+    with st.chat_message(USER_NAME):
+        st.write(user_msg)
+
+    # アシスタントのメッセージを表示
+    response = response_chatgpt(user_msg)
+    with st.chat_message(ASSISTANT_NAME):
         assistant_msg = ""
+        assistant_response_area = st.empty()
+        for chunk in response:
+            if chunk.choices[0].finish_reason is not None:
+                break
+            # 回答を逐次表示
+            assistant_msg += chunk.choices[0].delta.content
+            assistant_response_area.write(assistant_msg)
 
-        # ストリーム処理
-        try:
-            for response in response_gen:
-                if 'choices' in response and len(response['choices']) > 0:
-                    choice = response['choices'][0]
-                    if 'message' in choice and 'content' in choice['message']:
-                        assistant_msg += choice['message']['content']
-                        assistant_response_area.markdown(assistant_msg)
-                        if choice.get('finish_reason') is not None:
-                            # チャットログにアシスタントのメッセージを追加して表示
-                            st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
-                            st.session_state["chat_log"].append({"name": "assistant", "msg": assistant_msg})
-                            break
-        except Exception as inner_e:
-            st.error(f"ストリームの読み込み中にエラーが発生しました: {inner_e}")
-            st.error(traceback.format_exc())
-
-        # 以前のチャットログを表示
-        for chat in st.session_state["chat_log"]:
-            with st.chat_message(chat["name"]):
-                st.markdown(chat["msg"])
-
-except Exception as e:
-    st.error(f"エラーが発生しました: {e}")
-    st.error(traceback.format_exc())
+    # セッションにチャットログを追加
+    st.session_state.chat_log.append({"name": USER_NAME, "msg": user_msg})
+    st.session_state.chat_log.append({"name": ASSISTANT_NAME, "msg": assistant_msg})
