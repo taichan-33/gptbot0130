@@ -4,7 +4,6 @@ import openai
 # OpenAI APIキーの設定
 openai.api_key = st.secrets.OpenAIAPI.openai_api_key
 
-# タイトル設定
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
@@ -13,33 +12,39 @@ if "messages" not in st.session_state:
     initial_prompt = str(st.secrets.AppSettings.initial_prompt)
     st.session_state["messages"] = [{"role": "system", "content": initial_prompt}]
 
-# デフォルトモデルの設定
-if "openai_model" not in st.session_state:
-    st.session_state["openai_model"] = "gpt-4-0125-preview"
+# チャットログを保存したセッション情報を初期化
+if "chat_log" not in st.session_state:
+    st.session_state.chat_log = []
 
-# ユーザーの入力を取得
-prompt = st.chat_input("Your message here:")
-if prompt:
-    # ユーザーメッセージを履歴に追加
-    st.session_state.messages.append({"role": "user", "content": prompt})
+user_msg = st.chat_input("ここにメッセージを入力")
+if user_msg:
+    # 以前のチャットログを表示
+    for chat in st.session_state.chat_log:
+        with st.chat_message(chat["name"]):
+            st.markdown(chat["msg"])
 
-    # ユーザーメッセージを表示
+    # 最新のメッセージを表示
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(user_msg)
 
-    # OpenAIから応答を取得
+    # OpenAIからの応答を取得
+    st.session_state["messages"].append({"role": "user", "content": user_msg})
     response = openai.ChatCompletion.create(
-        model=st.session_state["openai_model"],
-        messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
+        model="gpt-4-0125-preview",
+        messages=st.session_state["messages"],
         stream=True
     )
 
-    # ボットの応答を表示
-    full_response = ""
-    for part in response:
-        full_response += part['choices'][0]['delta'].get('content', '')
-    with st.chat_message("assistant"):
-        st.markdown(full_response)
+    # アシスタントのメッセージを逐次表示
+    assistant_msg = ""
+    assistant_response_area = st.empty()
+    for chunk in response:
+        if 'choices' in chunk and chunk['choices'][0].get('finish_reason') is not None:
+            break
+        # 回答を逐次表示
+        assistant_msg += chunk['choices'][0]['message']['content']
+        assistant_response_area.markdown(assistant_msg)
 
-    # 応答を履歴に追加
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+    # セッションにチャットログを追加
+    st.session_state.chat_log.append({"name": "user", "msg": user_msg})
+    st.session_state.chat_log.append({"name": "assistant", "msg": assistant_msg})
