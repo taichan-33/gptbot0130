@@ -39,11 +39,14 @@ if user_msg:
     assistant_msg = ""
     assistant_response_area = st.empty()
     for chunk in response:
-        if 'choices' in chunk and chunk['choices'][0].get('finish_reason') is not None:
-            break
-        # 回答を逐次表示
-        assistant_msg += chunk['choices'][0]['message']['content']
-        assistant_response_area.markdown(assistant_msg)
+        if 'choices' in chunk and len(chunk['choices']) > 0:
+            choice = chunk['choices'][0]
+            if 'message' in choice and 'content' in choice['message']:
+                assistant_msg += choice['message']['content']
+                assistant_response_area.markdown(assistant_msg)
+
+            if choice.get('finish_reason') is not None:
+                break
 
     # セッションにチャットログを追加
     st.session_state.chat_log.append({"name": "user", "msg": user_msg})
