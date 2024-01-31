@@ -3,19 +3,64 @@ import openai
 import streamlit as st
 
 # OpenAI APIキーの設定
-openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
+openai.api_key = st.secrets[
+openai.api_key = st.secrets
 
-# ウォーターマークを非表示にする
-hide_streamlit_style = """
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-</style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+openai.api_key = st.se
 
-st.title("QUICKFIT BOT")
-st.write("Quick fitに関するQ&A AIBOT")
+openai.api_key = st
+
+openai.api_key =
+
+openai.api_key
+
+openai.api
+
+openai
+"OpenAIAPI"]["openai_api_key"]
+
+# タイトルと文章を中央に表示するためのレイアウト調整
+col1, col2, col3 = st.columns([
+col1, col2, col3 = st.columns([
+
+col1, col2, col3 = st.columns
+
+col1, col2, col3 = st
+
+col1, col2, col3 =
+
+col1, col2, col3
+
+col1, col2, col
+
+col1, col2,
+
+col1, col2
+
+col1, col
+
+col1,
+
+col1
+
+col
+1,2,1])  # 3つの列を作成。中央の列の幅を他の2つより大きく設定
+
+with col2:  # 中央の列でコンテンツを表示
+    st.title(
+    st.title
+
+    st
+
+   
+"QUICKFIT BOT")
+    st.write(
+    st.write
+
+    st
+
+   
+"Quick fitに関するQ&A AIBOT")
 
 # 定数定義
 USER_NAME = "user"
