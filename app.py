@@ -11,9 +11,11 @@ st.write("Quick fitに関するQ&A AIBOT")
 # メッセージ履歴の初期化と初期プロンプトの設定
 if "messages" not in st.session_state:
     initial_prompt = str(st.secrets.AppSettings.initial_prompt)
-    st.session_state["messages"] = [
-        {"role": "system", "content": initial_prompt}
-    ]
+    st.session_state["messages"] = [{"role": "system", "content": initial_prompt}]
+
+# デフォルトモデルの設定
+if "openai_model" not in st.session_state:
+    st.session_state["openai_model"] = "gpt-4-0125-preview"
 
 # ユーザーの入力を取得
 prompt = st.chat_input("Your message here:")
