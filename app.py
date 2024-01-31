@@ -21,10 +21,13 @@ try:
 
     # チャットログを保存したセッション情報を初期化
     if "chat_log" not in st.session_state:
-        st.session_state.chat_log = []
+        st.session_state["chat_log"] = []
 
     user_msg = st.chat_input("ここにメッセージを入力")
     if user_msg:
+        # ユーザーのメッセージをセッションのチャットログに追加
+        st.session_state.chat_log.append({"name": "user", "msg": user_msg})
+
         # 以前のチャットログを表示
         for chat in st.session_state.chat_log:
             with st.chat_message(chat["name"]):
@@ -42,16 +45,17 @@ try:
         assistant_msg = ""
         assistant_response_area = st.empty()
 
+        # ストリーム処理
         try:
-            # ストリーム処理
             for response in response_gen:
                 if 'choices' in response and len(response['choices']) > 0:
                     choice = response['choices'][0]
                     if 'message' in choice and 'content' in choice['message']:
                         assistant_msg += choice['message']['content']
                         assistant_response_area.markdown(assistant_msg)
-                        st.session_state.chat_log.append({"name": "assistant", "msg": assistant_msg})
                         if choice.get('finish_reason') is not None:
+                            # チャットログにアシスタントのメッセージを追加して表示
+                            st.session_state.chat_log.append({"name": "assistant", "msg": assistant_msg})
                             break
         except Exception as inner_e:
             st.error(f"ストリームの読み込み中にエラーが発生しました: {inner_e}")
