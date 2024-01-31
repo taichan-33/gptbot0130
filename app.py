@@ -43,24 +43,23 @@ try:
         )
 
         # アシスタントのメッセージを逐次表示
-    assistant_msg = ""
-    assistant_response_area = st.empty()
+        assistant_msg = ""
+        assistant_response_area = st.empty()
 
-    # ストリーム処理の修正
-    for message in response.iter_lines():
-        if message:
-            data = json.loads(message)
-            if 'choices' in data and len(data['choices']) > 0:
-                choice = data['choices'][0]
-                if 'message' in choice and 'content' in choice['message']:
-                    # メッセージを追加してUIに表示
-                    assistant_msg += choice['message']['content']
-                    assistant_response_area.markdown(assistant_msg)
-                    # チャットログにアシスタントのメッセージを追加
-                    st.session_state.chat_log.append({"name": "user", "msg": user_msg})
-                    st.session_state.chat_log.append({"name": "assistant", "msg": assistant_msg})
-                    if 'finish_reason' in choice and choice['finish_reason'] is not None:
-                        break
+        # ストリーム処理の修正
+        for message in response.iter_lines():
+            if message:
+                data = json.loads(message)
+                if 'choices' in data and len(data['choices']) > 0:
+                    choice = data['choices'][0]
+                    if 'message' in choice and 'content' in choice['message']:
+                        # メッセージを追加してUIに表示
+                        assistant_msg += choice['message']['content']
+                        assistant_response_area.markdown(assistant_msg)
+                        # チャットログにアシスタントのメッセージを追加
+                        st.session_state.chat_log.append({"name": "assistant", "msg": assistant_msg})
+                        if 'finish_reason' in choice and choice['finish_reason'] is not None:
+                            break
 
 except Exception as e:
     st.error(f"ストリーム処理中にエラーが発生しました: {e}")
