@@ -30,13 +30,9 @@ try:
             with st.chat_message(chat["name"]):
                 st.markdown(chat["msg"])
 
-        # 最新のメッセージを表示
-        with st.chat_message("user"):
-            st.markdown(user_msg)
-
         # OpenAIからの応答を取得
         st.session_state["messages"].append({"role": "user", "content": user_msg})
-        response = openai.ChatCompletion.create(
+        response_gen = openai.ChatCompletion.create(
             model="gpt-4-0125-preview",
             messages=st.session_state["messages"],
             stream=True
@@ -46,21 +42,21 @@ try:
         assistant_msg = ""
         assistant_response_area = st.empty()
 
-        # ストリーム処理の修正
-        for message in response.iter_lines():
-            if message:
-                data = json.loads(message)
-                if 'choices' in data and len(data['choices']) > 0:
-                    choice = data['choices'][0]
+        try:
+            # ストリーム処理
+            for response in response_gen:
+                if 'choices' in response and len(response['choices']) > 0:
+                    choice = response['choices'][0]
                     if 'message' in choice and 'content' in choice['message']:
-                        # メッセージを追加してUIに表示
                         assistant_msg += choice['message']['content']
                         assistant_response_area.markdown(assistant_msg)
-                        # チャットログにアシスタントのメッセージを追加
                         st.session_state.chat_log.append({"name": "assistant", "msg": assistant_msg})
-                        if 'finish_reason' in choice and choice['finish_reason'] is not None:
+                        if choice.get('finish_reason') is not None:
                             break
+        except Exception as inner_e:
+            st.error(f"ストリームの読み込み中にエラーが発生しました: {inner_e}")
+            st.error(traceback.format_exc())
 
 except Exception as e:
-    st.error(f"ストリーム処理中にエラーが発生しました: {e}")
+    st.error(f"エラーが発生しました: {e}")
     st.error(traceback.format_exc())
