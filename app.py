@@ -5,6 +5,15 @@ import streamlit as st
 # OpenAI APIキーの設定
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 
+# ウォーターマークを非表示にする
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
