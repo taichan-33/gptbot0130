@@ -54,7 +54,7 @@ if user_msg:
         st.write(user_msg)
 
     # アシスタントのメッセージを表示
-    response = response_chatgpt(user_msg)
+    response = response_chatgpt(user_msg, st.session_state["messages"])
     with st.chat_message(ASSISTANT_NAME):
         assistant_msg = ""
         assistant_response_area = st.empty()
@@ -66,5 +66,7 @@ if user_msg:
             assistant_response_area.write(assistant_msg)
 
     # セッションにチャットログを追加
+    st.session_state["messages"].append({"role": "user", "content": user_msg})
+    st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
     st.session_state.chat_log.append({"name": USER_NAME, "msg": user_msg})
     st.session_state.chat_log.append({"name": ASSISTANT_NAME, "msg": assistant_msg})
