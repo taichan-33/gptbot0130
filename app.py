@@ -1,7 +1,6 @@
 import streamlit as st
 import openai
 import traceback
-import json
 
 # OpenAI APIキーの設定
 try:
@@ -26,15 +25,10 @@ try:
     user_msg = st.chat_input("ここにメッセージを入力")
     if user_msg:
         # ユーザーのメッセージをセッションのチャットログに追加
-        st.session_state.chat_log.append({"name": "user", "msg": user_msg})
-
-        # 以前のチャットログを表示
-        for chat in st.session_state.chat_log:
-            with st.chat_message(chat["name"]):
-                st.markdown(chat["msg"])
+        st.session_state["messages"].append({"role": "user", "content": user_msg})
+        st.session_state["chat_log"].append({"name": "user", "msg": user_msg})
 
         # OpenAIからの応答を取得
-        st.session_state["messages"].append({"role": "user", "content": user_msg})
         response_gen = openai.ChatCompletion.create(
             model="gpt-4-0125-preview",
             messages=st.session_state["messages"],
@@ -42,8 +36,8 @@ try:
         )
 
         # アシスタントのメッセージを逐次表示
-        assistant_msg = ""
         assistant_response_area = st.empty()
+        assistant_msg = ""
 
         # ストリーム処理
         try:
@@ -55,11 +49,17 @@ try:
                         assistant_response_area.markdown(assistant_msg)
                         if choice.get('finish_reason') is not None:
                             # チャットログにアシスタントのメッセージを追加して表示
-                            st.session_state.chat_log.append({"name": "assistant", "msg": assistant_msg})
+                            st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
+                            st.session_state["chat_log"].append({"name": "assistant", "msg": assistant_msg})
                             break
         except Exception as inner_e:
             st.error(f"ストリームの読み込み中にエラーが発生しました: {inner_e}")
             st.error(traceback.format_exc())
+
+        # 以前のチャットログを表示
+        for chat in st.session_state["chat_log"]:
+            with st.chat_message(chat["name"]):
+                st.markdown(chat["msg"])
 
 except Exception as e:
     st.error(f"エラーが発生しました: {e}")
