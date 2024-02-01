@@ -1,0 +1,14 @@
+[server]
+enableCORS = false
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+# ここにテーマに関する設定を追加できる
+
+[deprecation]
+showfileUploaderEncoding = false
+
+[menu]
+enable = false  # これにより、右上のメニュー全体が非表示になります
