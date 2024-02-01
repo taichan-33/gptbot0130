@@ -1,14 +1,7 @@
-[server]
-enableCORS = false
-
-[browser]
-gatherUsageStats = false
-
 [theme]
-# ここにテーマに関する設定を追加できる
+base="light"
+primaryColor="#004a55"
+backgroundColor="#fafafa"
+textColor="#222"
+font="sans serif"
 
-[deprecation]
-showfileUploaderEncoding = false
-
-[menu]
-enable = false  # これにより、右上のメニュー全体が非表示になります
