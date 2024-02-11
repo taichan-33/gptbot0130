@@ -17,13 +17,9 @@ HIDE_ST_STYLE = """
                     visibility: hidden;
                     height: 0;
                 }
-                /* テキスト入力ボックスをページの最下部に配置 */
+                /* スクロールを最適化 */
                 .stApp {
-                    display: flex;
-                    flex-direction: column;
-                }
-                .stTextInput > div {
-                    margin-top: auto;
+                    overflow: hidden;
                 }
                 </style>
 """
@@ -38,13 +34,7 @@ ASSISTANT_NAME = "assistant"
 client = openai.ChatCompletion()
 
 def response_chatgpt(user_msg: str, past_messages: list, img_str: str = ""):
-    """ChatGPTのレスポンスを取得
-
-    Args:
-        user_msg (str): ユーザーメッセージ。
-        past_messages (list): 過去のメッセージリスト（ユーザーとアシスタントの両方）。
-        img_str (str): Base64エンコードされた画像データ。
-    """
+    """ChatGPTのレスポンスを取得"""
     messages_to_send = past_messages
     if img_str:
         # 画像データがある場合、それをメッセージに追加
@@ -70,6 +60,9 @@ if "messages" not in st.session_state:
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
+# 逐次表示用のプレースホルダ
+response_placeholder = st.empty()
+
 # 画像アップロード機能
 uploaded_file = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"], key="file_uploader")
 img_str = ""
@@ -78,12 +71,9 @@ if uploaded_file is not None:
     buffered = io.BytesIO()
     image.save(buffered, format="JPEG")
     img_str = base64.b64encode(buffered.getvalue()).decode()
-    st.image(image, caption="Uploaded Image.", use_column_width=True)
-
-# 以前のチャットログを表示
-for chat in st.session_state.chat_log:
-    with st.chat_message(chat["name"]):
-        st.write(chat["msg"])
+    # アップロードされた画像を表示するプレースホルダ
+    with response_placeholder.container():
+        st.image(image, caption="Uploaded Image.", use_column_width=True)
 
 # テキスト入力機能
 user_msg = st.text_input("ここにメッセージを入力（または画像の質問をします）", key="text_input")
@@ -92,7 +82,7 @@ if user_msg or img_str:
     # アシスタントのメッセージを逐次表示
     response = response_chatgpt(user_msg, st.session_state["messages"], img_str)
     assistant_msg = ""
-    assistant_response_area = st.empty()
+    assistant_response_area = response_placeholder.empty()
     for chunk in response:
         if chunk.choices[0].finish_reason is not None:
             break
