@@ -1,30 +1,32 @@
+import os
 import openai
 import streamlit as st
-from PIL import Image
-import io
-import base64
 
 # OpenAI APIキーの設定
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
 
+
 st.title("QUICKFIT BOT")
 st.write("Quick fitに関するQ&A AIBOT")
 
-# Streamlit UIの一部を非表示にするCSS
 HIDE_ST_STYLE = """
                 <style>
-                div[data-testid="stToolbar"], div[data-testid="stDecoration"] {
-                    visibility: hidden;
-                    height: 0;
+                div[data-testid="stToolbar"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
                 }
-                /* スクロールを最適化 */
-                .stApp {
-                    overflow: hidden;
+                div[data-testid="stDecoration"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
                 }
+				        
                 </style>
 """
 
 st.markdown(HIDE_ST_STYLE, unsafe_allow_html=True)
+
 
 # 定数定義
 USER_NAME = "user"
@@ -33,16 +35,16 @@ ASSISTANT_NAME = "assistant"
 # OpenAIクライアントの初期化
 client = openai.ChatCompletion()
 
-def response_chatgpt(user_msg: str, past_messages: list, img_str: str = ""):
-    """ChatGPTのレスポンスを取得"""
-    messages_to_send = past_messages
-    if img_str:
-        # 画像データがある場合、それをメッセージに追加
-        messages_to_send += [{"role": "user", "content": {"type": "image_base64", "image_base64": img_str}}]
-    if user_msg:
-        # ユーザーメッセージを追加
-        messages_to_send += [{"role": "user", "content": user_msg}]
-    
+def response_chatgpt(user_msg: str, past_messages: list):
+    """ChatGPTのレスポンスを取得
+
+    Args:
+        user_msg (str): ユーザーメッセージ。
+        past_messages (list): 過去のメッセージリスト（ユーザーとアシスタントの両方）。
+    """
+    # 過去のメッセージに現在のメッセージを追加
+    messages_to_send = past_messages + [{"role": "user", "content": user_msg}]
+
     # ChatGPTにメッセージを送信し、レスポンスを取得
     response = client.create(
         model="gpt-4-0125-preview",
@@ -60,42 +62,28 @@ if "messages" not in st.session_state:
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
-# 以前のチャットログを表示
-for chat in st.session_state.chat_log:
-    with st.chat_message(chat["name"]):
-        st.write(chat["msg"])
+user_msg = st.chat_input("ここにメッセージを入力")
+if user_msg:
+    # 以前のチャットログを表示
+    for chat in st.session_state.chat_log:
+        with st.chat_message(chat["name"]):
+            st.write(chat["msg"])
 
-# 画像アップロード機能
-uploaded_file = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"], key="file_uploader")
-img_str = ""
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    buffered = io.BytesIO()
-    image.save(buffered, format="JPEG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    # アップロードされた画像を表示
-    with st.chat_message(USER_NAME):
-        st.image(image, caption="Uploaded Image.", use_column_width=True)
-
-# テキスト入力機能
-user_msg = st.text_input("ここにメッセージを入力（または画像の質問をします）", key="text_input")
-
-if user_msg or img_str:
     # 最新のメッセージを表示
-    if user_msg:
-        with st.chat_message(USER_NAME):
-            st.write(user_msg)
+    with st.chat_message(USER_NAME):
+        st.write(user_msg)
 
-    # アシスタントのメッセージを逐次表示
-    response = response_chatgpt(user_msg, st.session_state["messages"], img_str)
-    assistant_msg = ""
-    assistant_response_area = st.empty()
-    for chunk in response:
-        if chunk.choices[0].finish_reason is not None:
-            break
-        assistant_msg += chunk.choices[0].delta.content
-        with st.chat_message(ASSISTANT_NAME):
-            st.write(assistant_msg)
+    # アシスタントのメッセージを表示
+    response = response_chatgpt(user_msg, st.session_state["messages"])
+    with st.chat_message(ASSISTANT_NAME):
+        assistant_msg = ""
+        assistant_response_area = st.empty()
+        for chunk in response:
+            if chunk.choices[0].finish_reason is not None:
+                break
+            # 回答を逐次表示
+            assistant_msg += chunk.choices[0].delta.content
+            assistant_response_area.write(assistant_msg)
 
     # セッションにチャットログを追加
     st.session_state["messages"].append({"role": "user", "content": user_msg})
