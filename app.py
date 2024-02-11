@@ -60,8 +60,10 @@ if "messages" not in st.session_state:
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
-# 逐次表示用のプレースホルダ
-response_placeholder = st.empty()
+# 以前のチャットログを表示
+for chat in st.session_state.chat_log:
+    with st.chat_message(chat["name"]):
+        st.write(chat["msg"])
 
 # 画像アップロード機能
 uploaded_file = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"], key="file_uploader")
@@ -71,23 +73,29 @@ if uploaded_file is not None:
     buffered = io.BytesIO()
     image.save(buffered, format="JPEG")
     img_str = base64.b64encode(buffered.getvalue()).decode()
-    # アップロードされた画像を表示するプレースホルダ
-    with response_placeholder.container():
+    # アップロードされた画像を表示
+    with st.chat_message(USER_NAME):
         st.image(image, caption="Uploaded Image.", use_column_width=True)
 
 # テキスト入力機能
 user_msg = st.text_input("ここにメッセージを入力（または画像の質問をします）", key="text_input")
 
 if user_msg or img_str:
+    # 最新のメッセージを表示
+    if user_msg:
+        with st.chat_message(USER_NAME):
+            st.write(user_msg)
+
     # アシスタントのメッセージを逐次表示
     response = response_chatgpt(user_msg, st.session_state["messages"], img_str)
     assistant_msg = ""
-    assistant_response_area = response_placeholder.empty()
+    assistant_response_area = st.empty()
     for chunk in response:
         if chunk.choices[0].finish_reason is not None:
             break
         assistant_msg += chunk.choices[0].delta.content
-        assistant_response_area.write(assistant_msg)
+        with st.chat_message(ASSISTANT_NAME):
+            st.write(assistant_msg)
 
     # セッションにチャットログを追加
     st.session_state["messages"].append({"role": "user", "content": user_msg})
