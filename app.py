@@ -13,15 +13,17 @@ st.write("Quick fitに関するQ&A AIBOT")
 # Streamlit UIの一部を非表示にするCSS
 HIDE_ST_STYLE = """
                 <style>
-                div[data-testid="stToolbar"] {
-                visibility: hidden;
-                height: 0%;
-                position: fixed;
+                div[data-testid="stToolbar"], div[data-testid="stDecoration"] {
+                    visibility: hidden;
+                    height: 0;
                 }
-                div[data-testid="stDecoration"] {
-                visibility: hidden;
-                height: 0%;
-                position: fixed;
+                /* テキスト入力ボックスをページの最下部に配置 */
+                .stApp {
+                    display: flex;
+                    flex-direction: column;
+                }
+                .stTextInput > div {
+                    margin-top: auto;
                 }
                 </style>
 """
@@ -69,7 +71,7 @@ if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 
 # 画像アップロード機能
-uploaded_file = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"], key="file_uploader")
 img_str = ""
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
@@ -78,24 +80,27 @@ if uploaded_file is not None:
     img_str = base64.b64encode(buffered.getvalue()).decode()
     st.image(image, caption="Uploaded Image.", use_column_width=True)
 
+# 以前のチャットログを表示
+for chat in st.session_state.chat_log:
+    with st.chat_message(chat["name"]):
+        st.write(chat["msg"])
+
 # テキスト入力機能
-user_msg = st.text_input("ここにメッセージを入力（または画像の質問をします）")
+user_msg = st.text_input("ここにメッセージを入力（または画像の質問をします）", key="text_input")
 
 if user_msg or img_str:
-    # チャットログの表示とアップデート
+    # アシスタントのメッセージを逐次表示
     response = response_chatgpt(user_msg, st.session_state["messages"], img_str)
     assistant_msg = ""
+    assistant_response_area = st.empty()
     for chunk in response:
         if chunk.choices[0].finish_reason is not None:
             break
         assistant_msg += chunk.choices[0].delta.content
-    
+        assistant_response_area.write(assistant_msg)
+
+    # セッションにチャットログを追加
     st.session_state["messages"].append({"role": "user", "content": user_msg})
     st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
     st.session_state.chat_log.append({"name": USER_NAME, "msg": user_msg})
     st.session_state.chat_log.append({"name": ASSISTANT_NAME, "msg": assistant_msg})
-
-    # アシスタントのメッセージを表示
-    for chat in st.session_state.chat_log:
-        with st.chat_message(chat["name"]):
-            st.write(chat["msg"])
