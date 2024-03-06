@@ -13,14 +13,22 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     
     try:
         # レスポンスを生成
-        st.info("Generating response...")
         response = anthropic.messages.create(
             model="claude-3-opus-20240229",
             messages=past_messages,
             max_tokens=1024,
+            stream=True,  # ストリーミングモードを有効化
         )
         
-        response_text = ''.join([content.text for content in response.content])
+        # ストリーム出力用のプレースホルダーを作成
+        response_placeholder = st.empty()
+        
+        # レスポンスをストリーム出力
+        response_text = ""
+        for data in response:
+            response_text += data.completion
+            response_placeholder.markdown(response_text)
+        
         return response_text
     
     except Exception as e:
@@ -35,14 +43,13 @@ def manage_past_messages(past_messages: list, new_user_message: str, new_assista
     updated_messages = [msg for msg in past_messages if msg["role"] != "system" and msg["content"].strip()]
     
     if new_user_message.strip():
-        updated_messages.append({"role": "user", "content": new_user_message})
+        if not updated_messages or updated_messages[-1]["role"] == "assistant":
+            updated_messages.append({"role": "user", "content": new_user_message})
+        else:
+            updated_messages[-1]["content"] += "\n" + new_user_message
     
     # アシスタントの応答が生成された場合、それを追加
     if new_assistant_message.strip():
         updated_messages.append({"role": "assistant", "content": new_assistant_message})
-    
-    # 連続した "user" ロールのメッセージがある場合、古いメッセージを削除
-    while len(updated_messages) >= 3 and updated_messages[-1]["role"] == "user" and updated_messages[-2]["role"] == "user":
-        updated_messages.pop(0)
     
     return updated_messages
