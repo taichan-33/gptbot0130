@@ -1,7 +1,7 @@
 import os
 import openai
 import streamlit as st
-from anthropic import Anthropic
+from anthropic import Anthropic, events
 
 # OpenAI APIキーの設定
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
@@ -143,15 +143,17 @@ if user_msg:
                     break
                 assistant_msg += chunk.choices[0].delta.content
             elif model == "claude3 opus":
-                if isinstance(chunk, events.MessageStartEvent):
+                if chunk.type == "start":
                     continue
-                elif isinstance(chunk, events.MessageDoneEvent):
+                elif chunk.type == "done":
                     break
-                elif isinstance(chunk, events.MessageContentEvent):
+                elif chunk.type == "content":
                     assistant_msg += chunk.data.decode("utf-8")
                 else:
-                    logging.warning(f"Unexpected event type: {type(chunk)}")
+                    logging.warning(f"Unexpected event type: {chunk.type}")
             assistant_response_area.write(assistant_msg)
+
+    # ... 省略 ...
 
     # セッションにチャットログを追加
     st.session_state["messages"].append({"role": "user", "content": user_msg})
