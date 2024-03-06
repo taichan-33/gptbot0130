@@ -26,17 +26,15 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
         return error_response
 
 def manage_past_messages(past_messages: list, new_user_message: str, new_assistant_message: str):
-    # 新しいユーザーメッセージとアシスタントの応答を追加
     updated_messages = [msg for msg in past_messages if msg["role"] != "system" and msg["content"].strip()]
-    
     if new_user_message.strip():
         if not updated_messages or updated_messages[-1]["role"] == "assistant":
             updated_messages.append({"role": "user", "content": new_user_message})
         else:
             updated_messages[-1]["content"] += "\n" + new_user_message
     
-    # アシスタントの応答が生成された場合、それを追加
+    # アシスタントの応答が空文字列でない場合のみ追加
     if new_assistant_message.strip():
         updated_messages.append({"role": "assistant", "content": new_assistant_message})
-    
+
     return updated_messages
