@@ -28,7 +28,6 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
-        st.error(f"Error occurred while making request to Anthropic API: {str(e)}")
         
         # エラーが発生した場合、ダミーの応答を返す
         error_response = "申し訳ありません。メッセージの処理中にエラーが発生しました。もう一度お試しください。"
