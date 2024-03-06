@@ -2,7 +2,16 @@ import os
 import openai
 import streamlit as st
 from anthropic import Anthropic
-from claude_llm import ClaudeLlm  # ClaudeLlmクラスをインポート
+import pandas as pd
+from forex_python.converter import CurrencyRates
+import time
+import anthropic
+from anthropic.types.message_stream_event import (
+    MessageStartEvent,
+    MessageDeltaEvent,
+    ContentBlockDeltaEvent,
+)
+
 
 # OpenAI APIキーの設定
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
