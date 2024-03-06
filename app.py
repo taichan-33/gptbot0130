@@ -18,18 +18,17 @@ st.write("Quick fitに関するQ&A AIBOT")
 HIDE_ST_STYLE = """
 <style>
 div[data-testid="stToolbar"] {
-    visibility: hidden;
-    height: 0%;
-    position: fixed;
+visibility: hidden;
+height: 0%;
+position: fixed;
 }
 div[data-testid="stDecoration"] {
-    visibility: hidden;
-    height: 0%;
-    position: fixed;
+visibility: hidden;
+height: 0%;
+position: fixed;
 }
 </style>
 """
-
 st.markdown(HIDE_ST_STYLE, unsafe_allow_html=True)
 
 # 定数定義
@@ -66,19 +65,19 @@ if user_msg:
     elif model == "claude3 opus":
         response = response_claude(user_msg, st.session_state["messages"], anthropic_api_key)
 
+    assistant_msg = ""
+
     # アシスタントのメッセージを表示
     with st.chat_message(ASSISTANT_NAME):
-        assistant_msg = ""
-        assistant_response_area = st.empty()
-        for chunk in response:
-            if model == "chatgpt":
+        if model == "chatgpt":
+            for chunk in response:
                 if chunk.choices[0].finish_reason is not None:
                     break
                 assistant_msg += chunk.choices[0].delta.content
-            elif model == "claude3 opus":
-                if isinstance(chunk, str):
-                    assistant_msg += chunk
-            assistant_response_area.write(assistant_msg)
+        elif model == "claude3 opus":
+            assistant_msg = response
+
+        st.write(assistant_msg)
 
     # セッションにチャットログを追加
     st.session_state["messages"].append({"role": "user", "content": user_msg})
