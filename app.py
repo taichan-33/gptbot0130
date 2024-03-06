@@ -73,13 +73,14 @@ if user_msg:
         for chunk in response:
             if model == "chatgpt":
                 if chunk.choices[0].finish_reason is not None:
-                    break
+                   break
                 assistant_msg += chunk.choices[0].delta.content
+                assistant_response_area.write(assistant_msg)
             elif model == "claude3 opus":
                 if isinstance(chunk, str):
-                    assistant_msg += chunk
+                    assistant_msg = chunk
             assistant_response_area.write(assistant_msg)
-
+    
     # セッションにチャットログを追加
     st.session_state["messages"].append({"role": "user", "content": user_msg})
     st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
