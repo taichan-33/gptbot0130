@@ -1,11 +1,10 @@
 import os
 import openai
 import streamlit as st
-from anthropic import Anthropic
+from chat_gpt import response_chatgpt
+from claude import response_claude
 import pandas as pd
 import time
-import anthropic
-
 
 # OpenAI APIキーの設定
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
@@ -37,107 +36,6 @@ st.markdown(HIDE_ST_STYLE, unsafe_allow_html=True)
 USER_NAME = "user"
 ASSISTANT_NAME = "assistant"
 
-# OpenAIクライアントの初期化
-client = openai.ChatCompletion()
-
-
-class ClaudeLlm:
-    def __init__(self, anthropic, user_msg):
-        self.anthropic = anthropic
-        self.user_msg = user_msg
-
-    def generate_responses(self, model):
-        start_time = time.time()
-        input_tokens = 0
-        output_tokens = 0
-
-        try:
-            response = self.anthropic.completions.create(
-                model=model,
-                prompt=self.user_msg,
-                stop_sequences=[],
-                max_tokens_to_sample=4096,
-                stream=True,
-            )
-
-            response_buffer = ""
-            for chunk in response:
-                if isinstance(chunk, dict) and "completion" in chunk:
-                    response_buffer += chunk["completion"]
-
-            return response_buffer
-
-        except Exception as e:
-            logging.error(
-                f"Error occurred while making request to Anthropic API: {str(e)}"
-            )
-            raise
-
-
-def response_chatgpt(user_msg: str, past_messages: list):
-    """ChatGPTのレスポンスを取得
-
-    Args:
-        user_msg (str): ユーザーメッセージ。
-        past_messages (list): 過去のメッセージリスト（ユーザーとアシスタントの両方）。
-    """
-    # 過去のメッセージに現在のメッセージを追加
-    messages_to_send = past_messages + [{"role": "user", "content": user_msg}]
-    # ChatGPTにメッセージを送信し、レスポンスを取得
-    response = client.create(
-        model="gpt-4-0125-preview",
-        messages=messages_to_send,
-        stream=True,
-    )
-    return response
-
-
-import logging
-
-
-def response_claude(user_msg: str, past_messages: list):
-    anthropic = Anthropic(api_key=anthropic_api_key)
-
-    # システムプロンプトを取り出す
-    system_prompt = next(
-        (msg["content"] for msg in past_messages if msg["role"] == "system"), None
-    )
-
-    # ユーザーとアシスタントのメッセージのみを残す
-    filtered_messages = [
-        msg for msg in past_messages if msg["role"] in ["user", "assistant"]
-    ]
-
-    # 過去のメッセージに現在のメッセージを追加
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-
-    for message in filtered_messages:
-        if message["content"].strip():  # 空でないコンテンツのみを追加
-            messages.append(message)
-
-    messages.append({"role": "user", "content": user_msg})
-
-    logging.info(f"Request to Anthropic API: {messages}")
-
-    try:
-        # ClaudeLlmクラスのインスタンスを作成
-        claude = ClaudeLlm(anthropic, messages)
-
-        # レスポンスを生成
-        response_buffer = ""
-        for chunk in claude.generate_responses("claude-3-opus-20240229"):
-            response_buffer += chunk
-
-        logging.info(f"Response from Anthropic API: {response_buffer}")
-        return response_buffer
-
-    except Exception as e:
-        logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
-        raise
-
-
 # サイドバーの追加
 model = st.sidebar.selectbox("Select Model", ["chatgpt", "claude3 opus"])
 
@@ -166,7 +64,7 @@ if user_msg:
     if model == "chatgpt":
         response = response_chatgpt(user_msg, st.session_state["messages"])
     elif model == "claude3 opus":
-        response = response_claude(user_msg, st.session_state["messages"])
+        response = response_claude(user_msg, st.session_state["messages"], anthropic_api_key)
 
     # アシスタントのメッセージを表示
     with st.chat_message(ASSISTANT_NAME):
@@ -187,4 +85,3 @@ if user_msg:
     st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
     st.session_state.chat_log.append({"name": USER_NAME, "msg": user_msg})
     st.session_state.chat_log.append({"name": ASSISTANT_NAME, "msg": assistant_msg})
- 
