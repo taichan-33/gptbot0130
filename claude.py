@@ -22,7 +22,7 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
         response = anthropic.messages.create(
             model="claude-3-opus-20240229",
             messages=messages,
-            max_tokens_to_sample=1024,
+            max_tokens=1024,
         )
 
         response_text = response["completion"]
