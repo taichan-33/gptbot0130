@@ -97,12 +97,14 @@ import logging
 
 
 def response_claude(user_msg: str, past_messages: list):
+    # Assuming anthropic has been initialized correctly with the API key
     anthropic = Anthropic(api_key=anthropic_api_key)
 
     system_prompt = next(
         (msg["content"] for msg in past_messages if msg["role"] == "system"), None
     )
 
+    # Filter and prepare messages for the prompt
     filtered_messages = [
         msg for msg in past_messages if msg["role"] in ["user", "assistant"]
     ]
@@ -113,18 +115,19 @@ def response_claude(user_msg: str, past_messages: list):
 
     for message in filtered_messages:
         if message["content"].strip():
-            messages.append(message)
+            messages.append({"role": message["role"], "content": message["content"]})
 
     messages.append({"role": "user", "content": user_msg})
 
     logging.info(f"Request to Anthropic API: {messages}")
 
     try:
-        response = client.completions.create(
+        # Correct method to create a message in the Anthropic API, adjusted according to typical API interaction patterns
+        response = anthropic.create_message(
             model="claude-3-opus-20240229",
+            messages=messages,
             max_tokens=1000,
             temperature=0.0,
-            prompt=messages,
         )
 
         logging.info(f"Response from Anthropic API: {response}")
@@ -134,10 +137,10 @@ def response_claude(user_msg: str, past_messages: list):
         error_message = (
             f"Error occurred while making request to Anthropic API: {str(e)}"
         )
-        error_traceback = traceback.format_exc()
         logging.error(error_message)
-        logging.error(f"Traceback: {error_traceback}")
-        st.error(error_message)
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        if "st" in globals():
+            st.error(error_message)  # Show error in Streamlit UI if 'st' is available
         raise
 
 
