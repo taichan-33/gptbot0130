@@ -47,8 +47,8 @@ class ClaudeLlm:
         self.user_msg = user_msg
 
     def generate_responses(self, model):
-        response = self.anthropic.complete(
-            prompt=self.user_msg,
+        response = self.anthropic.completion(
+            prompt=f"{anthropic.HUMAN_PROMPT} {self.user_msg}{anthropic.AI_PROMPT}",
             stop_sequences=[anthropic.HUMAN_PROMPT],
             max_tokens_to_sample=4096,
             model=model,
