@@ -5,7 +5,6 @@ from anthropic import Anthropic
 import pandas as pd
 import time
 import anthropic
-import traceback
 
 
 # OpenAI APIキーの設定
@@ -96,31 +95,26 @@ def response_chatgpt(user_msg: str, past_messages: list):
 import logging
 
 
-import anthropic
-import logging
-
-# 以前の設定に従ってAnthropic APIキーを設定
-anthropic_api_key = "your_api_key_here"  # 実際のAPIキーに置き換えてください
-client = anthropic.Anthropic(api_key=anthropic_api_key)
-
-
 def response_claude(user_msg: str, past_messages: list):
-    client = anthropic.Anthropic(api_key=anthropic_api_key)
+    anthropic = Anthropic(api_key=anthropic_api_key)
 
+    # システムプロンプトを取り出す
     system_prompt = next(
         (msg["content"] for msg in past_messages if msg["role"] == "system"), None
     )
 
+    # ユーザーとアシスタントのメッセージのみを残す
     filtered_messages = [
         msg for msg in past_messages if msg["role"] in ["user", "assistant"]
     ]
 
+    # 過去のメッセージに現在のメッセージを追加
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
 
     for message in filtered_messages:
-        if message["content"].strip():
+        if message["content"].strip():  # 空でないコンテンツのみを追加
             messages.append(message)
 
     messages.append({"role": "user", "content": user_msg})
@@ -128,24 +122,19 @@ def response_claude(user_msg: str, past_messages: list):
     logging.info(f"Request to Anthropic API: {messages}")
 
     try:
-        response = client.completions.create(
-            model="claude-3-opus-20240229",
-            max_tokens=1000,
-            temperature=0.0,
-            prompt=messages,
-        )
+        # ClaudeLlmクラスのインスタンスを作成
+        claude = ClaudeLlm(anthropic, messages)
 
-        logging.info(f"Response from Anthropic API: {response}")
-        return response
+        # レスポンスを生成
+        response_buffer = ""
+        for chunk in claude.generate_responses("claude-3-opus-20240229"):
+            response_buffer += chunk
+
+        logging.info(f"Response from Anthropic API: {response_buffer}")
+        return response_buffer
 
     except Exception as e:
-        error_message = (
-            f"Error occurred while making request to Anthropic API: {str(e)}"
-        )
-        error_traceback = traceback.format_exc()
-        logging.error(error_message)
-        logging.error(f"Traceback: {error_traceback}")
-        st.error(error_message)
+        logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
         raise
 
 
@@ -198,3 +187,4 @@ if user_msg:
     st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
     st.session_state.chat_log.append({"name": USER_NAME, "msg": user_msg})
     st.session_state.chat_log.append({"name": ASSISTANT_NAME, "msg": assistant_msg})
+ 
