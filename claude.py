@@ -17,13 +17,15 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
         
         # レスポンスを生成
         response_text = ""
-        for chunk in anthropic.messages.stream(
+        stream = anthropic.messages.stream(
             model="claude-3-opus-20240229",
             messages=past_messages,
             max_tokens=1024,
-        ):
+        )
+        
+        for chunk in stream:
             # レスポンスをストリーム出力
-            response_text += chunk
+            response_text += chunk.text
             response_placeholder.markdown(response_text)
         
         return response_text.strip()
