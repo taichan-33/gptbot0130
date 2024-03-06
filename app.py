@@ -83,12 +83,6 @@ import logging
 
 
 def response_claude(user_msg: str, past_messages: list):
-    """Claude-3のレスポンスを取得
-
-    Args:
-        user_msg (str): ユーザーメッセージ。
-        past_messages (list): 過去のメッセージリスト（ユーザーとアシスタントの両方）。
-    """
     anthropic = Anthropic(api_key=anthropic_api_key)
 
     # システムプロンプトを取り出す
@@ -102,32 +96,37 @@ def response_claude(user_msg: str, past_messages: list):
     ]
 
     # 過去のメッセージに現在のメッセージを追加
-    messages_to_send = ""
+    messages_to_send = []
     if system_prompt:
-        messages_to_send += f"{system_prompt}\n\n"
+        messages_to_send.append({"role": "system", "content": system_prompt})
 
     for message in filtered_messages:
         if message["content"].strip():  # 空でないコンテンツのみを追加
-            role = message["role"].capitalize()
-            messages_to_send += f"{role}: {message['content']}\n\n"
+            messages_to_send.append(message)
 
-    messages_to_send += f"Human: {user_msg}\n\nAssistant: "
+    messages_to_send.append({"role": "user", "content": user_msg})
 
     logging.info(f"Request to Anthropic API: {messages_to_send}")
 
     try:
-        # ClaudeLlmクラスのインスタンスを作成
-        claude = ClaudeLlm(anthropic, messages_to_send)
+        response = anthropic.completions.create(
+            prompt=messages_to_send,
+            model="claude-3-opus-20240229",
+            max_tokens_to_sample=4096,
+            stream=True,
+        )
 
-        # レスポンスを生成
-        response = claude.generate_responses("claude-3-opus-20240229")
-        logging.info(f"Response from Anthropic API: {response}")
+        response_buffer = ""
+        for chunk in response:
+            if isinstance(chunk, dict) and "completion" in chunk:
+                response_buffer += chunk["completion"]
+
+        logging.info(f"Response from Anthropic API: {response_buffer}")
+        return response_buffer
 
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
         raise
-
-    return response
 
 
 # サイドバーの追加
