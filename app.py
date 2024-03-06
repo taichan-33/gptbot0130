@@ -62,8 +62,9 @@ def response_claude(user_msg: str, past_messages: list):
     """
     anthropic = Anthropic(api_key=anthropic_api_key)
     # 過去のメッセージに現在のメッセージを追加
-    messages_to_send = past_messages + [{"role": "user", "content": user_msg}]
-
+    messages_to_send = [{"role": message["role"], "content": message["content"]} for message in past_messages]
+    messages_to_send.append({"role": "user", "content": user_msg})
+    
     # Claude-3にメッセージを送信し、レスポンスを取得
     response = anthropic.messages.create(
         max_tokens=2000,
