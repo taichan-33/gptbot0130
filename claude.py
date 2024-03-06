@@ -13,9 +13,15 @@ class ClaudeLlm:
         output_tokens = 0
 
         try:
+            # user_msgがリストの場合、適切な形式に変換する
+            if isinstance(self.user_msg, list):
+                prompt = "\n".join([f"{msg['role']}: {msg['content']}" for msg in self.user_msg])
+            else:
+                prompt = self.user_msg
+
             response = self.anthropic.completions.create(
                 model=model,
-                prompt=self.user_msg,
+                prompt=prompt,
                 stop_sequences=[],
                 max_tokens_to_sample=4096,
                 stream=True,
@@ -33,6 +39,7 @@ class ClaudeLlm:
                 f"Error occurred while making request to Anthropic API: {str(e)}"
             )
             raise
+
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     anthropic = Anthropic(api_key=anthropic_api_key)
