@@ -12,11 +12,8 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     logging.info(f"Request to Anthropic API: {past_messages}")
     
     try:
-        # レスポンス生成中のメッセージを表示するプレースホルダー
-        placeholder = st.empty()
-        
         # レスポンスを生成
-        placeholder.info("Generating response...")
+        st.info("Generating response...")
         response = anthropic.messages.create(
             model="claude-3-opus-20240229",
             messages=past_messages,
@@ -24,10 +21,6 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
         )
         
         response_text = ''.join([content.text for content in response.content])
-        
-        # プレースホルダーのメッセージを削除
-        placeholder.empty()
-        
         return response_text
     
     except Exception as e:
