@@ -10,7 +10,6 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     past_messages = manage_past_messages(past_messages, user_msg, "")
     
     logging.info(f"Request to Anthropic API: {past_messages}")
-    st.info(f"Request to Anthropic API: {past_messages}")
     
     try:
         # レスポンスを生成
@@ -22,8 +21,6 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
         )
         
         response_text = ''.join([content.text for content in response.content])
-        logging.info(f"Response from Anthropic API: {response_text}")
-        st.info(f"Response from Anthropic API: {response_text}")
         return response_text
     
     except Exception as e:
