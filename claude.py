@@ -1,6 +1,7 @@
 import logging
 from anthropic import Anthropic
 import time
+import streamlit as st
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     anthropic = Anthropic(api_key=anthropic_api_key)
@@ -16,9 +17,11 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     messages = filtered_messages + [{"role": "user", "content": user_msg}]
 
     logging.info(f"Request to Anthropic API: {messages}")
+    st.info(f"Request to Anthropic API: {messages}")  # Streamlitアプリケーションにログを表示
 
     try:
         # レスポンスを生成
+        st.info("Generating response...")  # 処理開始のログを表示
         response = anthropic.messages.create(
             model="claude-3-opus-20240229",
             messages=messages,
@@ -26,9 +29,11 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
         )
         response_text = response.content
         logging.info(f"Response from Anthropic API: {response_text}")
+        st.info(f"Response from Anthropic API: {response_text}")  # Streamlitアプリケーションにログを表示
         return response_text
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
+        st.error(f"Error occurred while making request to Anthropic API: {str(e)}")  # エラーログを表示
         
         # エラーが発生した場合、ダミーの応答を返す
         error_response = "申し訳ありません。メッセージの処理中にエラーが発生しました。もう一度お試しください。"
