@@ -65,7 +65,7 @@ def response_claude(user_msg: str, past_messages: list):
     messages_to_send = past_messages + [{"role": "user", "content": user_msg}]
     # Claude-3にメッセージを送信し、レスポンスを取得
     response = anthropic.completions.create(
-        prompt=f"{anthropic.HUMAN_PROMPT} {user_msg}",
+        prompt=f"{anthropic.HUMAN_PROMPT} {user_msg}{anthropic.AI_PROMPT}",
         stop_sequences=[anthropic.AI_PROMPT],
         max_tokens_to_sample=2000,
         model="claude-3-opus-20240229",
