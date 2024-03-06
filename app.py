@@ -3,7 +3,6 @@ import openai
 import streamlit as st
 from anthropic import Anthropic
 import pandas as pd
-from forex_python.converter import CurrencyRates
 import time
 import anthropic
 from anthropic.types.message_stream_event import (
