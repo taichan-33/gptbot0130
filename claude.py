@@ -29,7 +29,6 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
         error_response = "申し訳ありません。メッセージの処理中にエラーが発生しました。もう一度お試しください。"
         return error_response
-
 def manage_past_messages(past_messages: list, new_user_message: str, new_assistant_message: str):
     # 新しいユーザーメッセージとアシスタントの応答を追加
     updated_messages = [msg for msg in past_messages if msg["role"] != "system" and msg["content"].strip()]
