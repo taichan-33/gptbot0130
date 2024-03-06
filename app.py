@@ -64,8 +64,14 @@ def response_claude(user_msg: str, past_messages: list):
     """
     anthropic = Anthropic(api_key=anthropic_api_key)
 
+    # システムプロンプトを取り出す
+    system_prompt = next((msg["content"] for msg in past_messages if msg["role"] == "system"), None)
+    
+    # ユーザーとアシスタントのメッセージのみを残す
+    filtered_messages = [msg for msg in past_messages if msg["role"] in ["user", "assistant"]]
+
     # 過去のメッセージに現在のメッセージを追加
-    messages_to_send = [{"role": message["role"], "content": message["content"]} for message in past_messages]
+    messages_to_send = [{"role": message["role"], "content": message["content"]} for message in filtered_messages]
     messages_to_send.append({"role": "user", "content": user_msg})
 
     logging.info(f"Request to Anthropic API: {messages_to_send}")
@@ -77,6 +83,7 @@ def response_claude(user_msg: str, past_messages: list):
             messages=messages_to_send,
             model="claude-3-opus-20240229",
             stream=True,
+            system=system_prompt,  # トップレベルのsystemパラメータとしてシステムプロンプトを指定
         )
         logging.info(f"Response from Anthropic API: {response}")
     except Exception as e:
