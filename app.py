@@ -78,11 +78,17 @@ def response_claude(user_msg: str, past_messages: list):
     ]
 
     # 過去のメッセージに現在のメッセージを追加
-    messages_to_send = [
-        {"role": message["role"], "content": message["content"]}
-        for message in filtered_messages
-        if message["content"].strip()  # 空でないコンテンツのみを追加
-    ]
+    messages_to_send = []
+    for message in filtered_messages:
+        if message["content"].strip():  # 空でないコンテンツのみを追加
+            messages_to_send.append(
+                {"role": message["role"], "content": message["content"]}
+            )
+            if message["role"] == "user":
+                messages_to_send.append(
+                    {"role": "assistant", "content": ""}
+                )  # ユーザーメッセージの後に空のアシスタントメッセージを追加
+
     messages_to_send.append({"role": "user", "content": user_msg})
 
     logging.info(f"Request to Anthropic API: {messages_to_send}")
