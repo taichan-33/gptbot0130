@@ -2,7 +2,6 @@ import os
 import openai
 import streamlit as st
 from anthropic import Anthropic
-from anthropic.events import MessageStartEvent, MessageDoneEvent, MessageContentEvent
 
 # OpenAI APIキーの設定
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
@@ -144,11 +143,11 @@ if user_msg:
                     break
                 assistant_msg += chunk.choices[0].delta.content
             elif model == "claude3 opus":
-                if isinstance(chunk, MessageStartEvent):
+                if isinstance(chunk, anthropic.MessageStartEvent):
                     continue
-                elif isinstance(chunk, MessageDoneEvent):
+                elif isinstance(chunk, anthropic.MessageDoneEvent):
                     break
-                elif isinstance(chunk, MessageContentEvent):
+                elif isinstance(chunk, anthropic.MessageContentEvent):
                     assistant_msg += chunk.data.decode("utf-8")
                 else:
                     logging.warning(f"Unexpected event type: {type(chunk)}")
