@@ -26,8 +26,12 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
             for text in stream.text_stream:
                 response_text += text
                 response_placeholder.markdown(response_text)
+                
+                # 最初の回答が生成された後、ループを終了
+                if text.endswith((".", "?", "!")):
+                    break
         
-        return response_text
+        return response_text.strip()
     
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
