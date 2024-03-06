@@ -99,23 +99,20 @@ import logging
 def response_claude(user_msg: str, past_messages: list):
     anthropic = Anthropic(api_key=anthropic_api_key)
 
-    # システムプロンプトを取り出す
     system_prompt = next(
         (msg["content"] for msg in past_messages if msg["role"] == "system"), None
     )
 
-    # ユーザーとアシスタントのメッセージのみを残す
     filtered_messages = [
         msg for msg in past_messages if msg["role"] in ["user", "assistant"]
     ]
 
-    # 過去のメッセージに現在のメッセージを追加
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
 
     for message in filtered_messages:
-        if message["content"].strip():  # 空でないコンテンツのみを追加
+        if message["content"].strip():
             messages.append(message)
 
     messages.append({"role": "user", "content": user_msg})
@@ -123,20 +120,24 @@ def response_claude(user_msg: str, past_messages: list):
     logging.info(f"Request to Anthropic API: {messages}")
 
     try:
-        # ClaudeLlmクラスのインスタンスを作成
-        claude = ClaudeLlm(anthropic, messages)
+        response = client.messages.create(
+            model="claude-3-opus-20240229",
+            max_tokens=1000,
+            temperature=0.0,
+            messages=messages,
+        )
 
-        # レスポンスを生成
-        response_buffer = ""
-        for chunk in claude.generate_responses("claude-3-opus-20240229"):
-            response_buffer += chunk
-
-        logging.info(f"Response from Anthropic API: {response_buffer}")
-        return response_buffer
+        logging.info(f"Response from Anthropic API: {response.content}")
+        return response.content
 
     except Exception as e:
-        logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
-        logging.error(f"Traceback: {traceback.format_exc()}")
+        error_message = (
+            f"Error occurred while making request to Anthropic API: {str(e)}"
+        )
+        error_traceback = traceback.format_exc()
+        logging.error(error_message)
+        logging.error(f"Traceback: {error_traceback}")
+        st.error(error_message)
         raise
 
 
