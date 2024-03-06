@@ -53,25 +53,36 @@ def response_chatgpt(user_msg: str, past_messages: list):
     )
     return response
 
+import logging
+
 def response_claude(user_msg: str, past_messages: list):
     """Claude-3のレスポンスを取得
-    
+
     Args:
         user_msg (str): ユーザーメッセージ。
         past_messages (list): 過去のメッセージリスト（ユーザーとアシスタントの両方）。
     """
     anthropic = Anthropic(api_key=anthropic_api_key)
+
     # 過去のメッセージに現在のメッセージを追加
     messages_to_send = [{"role": message["role"], "content": message["content"]} for message in past_messages]
     messages_to_send.append({"role": "user", "content": user_msg})
-    
-    # Claude-3にメッセージを送信し、レスポンスを取得
-    response = anthropic.messages.create(
-        max_tokens=2000,
-        messages=messages_to_send,
-        model="claude-3-opus-20240229",
-        stream=True,
-    )
+
+    logging.info(f"Request to Anthropic API: {messages_to_send}")
+
+    try:
+        # Claude-3にメッセージを送信し、レスポンスを取得
+        response = anthropic.messages.create(
+            max_tokens=2000,
+            messages=messages_to_send,
+            model="claude-3-opus-20240229",
+            stream=True,
+        )
+        logging.info(f"Response from Anthropic API: {response}")
+    except Exception as e:
+        logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
+        raise
+
     return response
 
 # サイドバーの追加
