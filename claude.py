@@ -3,7 +3,7 @@ from anthropic import Anthropic
 import time
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
-    anthropic = Anthropic(api_key=anthropic_api_key)
+    anthropic = Anthropic(x_api_key=anthropic_api_key)
 
     # ユーザーとアシスタントのメッセージのみを残す
     filtered_messages = [
@@ -23,13 +23,14 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
             model="claude-3-opus-20240229",
             messages=messages,
             max_tokens=1024,
+            headers={
+                "x-api-key": anthropic_api_key,
+                "anthropic-version": "2023-06-01"
+            }
         )
-
         response_text = response.content
-
         logging.info(f"Response from Anthropic API: {response_text}")
         return response_text
-
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
         raise
