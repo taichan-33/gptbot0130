@@ -21,7 +21,7 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
             max_tokens=1024,
         )
         
-        response_text = response.content.text if isinstance(response.content, dict) and 'text' in response.content else str(response.content)
+        response_text = ''.join([content.text for content in response.content])
         logging.info(f"Response from Anthropic API: {response_text}")
         st.info(f"Response from Anthropic API: {response_text}")
         return response_text
