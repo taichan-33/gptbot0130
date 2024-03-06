@@ -5,6 +5,7 @@ from anthropic import Anthropic
 import pandas as pd
 import time
 import anthropic
+import traceback
 
 
 # OpenAI APIキーの設定
