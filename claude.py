@@ -12,27 +12,20 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     logging.info(f"Request to Anthropic API: {past_messages}")
     
     try:
-        # レスポンスを生成
-        response = anthropic.messages.create(
-            model="claude-3-opus-20240229",
-            messages=past_messages,
-            max_tokens=1024,
-            stream=True,  # ストリーミングモードを有効化
-        )
-        
         # ストリーム出力用のプレースホルダーを作成
         response_placeholder = st.empty()
         
-        # レスポンスをストリーム出力
-        response_text = ""
-        for event in response:
-            if isinstance(event, anthropic.StartConversationEvent):
-                continue
-            elif isinstance(event, anthropic.SegmentEvent):
-                response_text += event.text
+        # レスポンスを生成
+        with anthropic.messages.stream(
+            model="claude-3-opus-20240229",
+            messages=past_messages,
+            max_tokens=1024,
+        ) as stream:
+            # レスポンスをストリーム出力
+            response_text = ""
+            for text in stream.text_stream:
+                response_text += text
                 response_placeholder.markdown(response_text)
-            elif isinstance(event, anthropic.ErrorEvent):
-                raise Exception(f"Error from Anthropic API: {event.error}")
         
         return response_text
     
