@@ -120,15 +120,15 @@ def response_claude(user_msg: str, past_messages: list):
     logging.info(f"Request to Anthropic API: {messages}")
 
     try:
-        response = client.messages.create(
+        response = client.completions.create(
             model="claude-3-opus-20240229",
             max_tokens=1000,
             temperature=0.0,
-            messages=messages,
+            prompt=messages,
         )
 
-        logging.info(f"Response from Anthropic API: {response.content}")
-        return response.content
+        logging.info(f"Response from Anthropic API: {response}")
+        return response
 
     except Exception as e:
         error_message = (
