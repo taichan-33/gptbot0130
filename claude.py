@@ -3,7 +3,7 @@ from anthropic import Anthropic
 import time
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
-    anthropic = Anthropic(x_api_key=anthropic_api_key)
+    anthropic = Anthropic(api_key=anthropic_api_key)
 
     # ユーザーとアシスタントのメッセージのみを残す
     filtered_messages = [
@@ -24,7 +24,6 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
             messages=messages,
             max_tokens=1024,
             headers={
-                "x-api-key": anthropic_api_key,
                 "anthropic-version": "2023-06-01"
             }
         )
