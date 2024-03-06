@@ -47,17 +47,17 @@ class ClaudeLlm:
         self.user_msg = user_msg
 
     def generate_responses(self, model):
-        response = self.anthropic.completion(
-            prompt=f"{anthropic.HUMAN_PROMPT} {self.user_msg}{anthropic.AI_PROMPT}",
-            stop_sequences=[anthropic.HUMAN_PROMPT],
-            max_tokens_to_sample=4096,
+        response = self.anthropic.completions.create(
             model=model,
+            prompt=self.user_msg,
+            stop_sequences=[],
+            max_tokens_to_sample=4096,
             stream=True,
         )
         response_buffer = ""
         for chunk in response:
-            if isinstance(chunk, str):
-                response_buffer += chunk
+            if isinstance(chunk, dict) and "completion" in chunk:
+                response_buffer += chunk["completion"]
         return response_buffer
 
 
