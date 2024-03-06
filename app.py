@@ -123,19 +123,19 @@ if user_msg:
         response = response_claude(user_msg, st.session_state["messages"])
 
     # アシスタントのメッセージを表示
-    with st.chat_message(ASSISTANT_NAME):
-        assistant_msg = ""
-        assistant_response_area = st.empty()
-        for chunk in response:
-            if model == "chatgpt":
-                if chunk.choices[0].finish_reason is not None:
-                    break
-                assistant_msg += chunk.choices[0].delta.content
-            elif model == "claude3 opus":
-                assistant_msg += chunk.completion
-                if chunk.stop_reason == "stop_sequence":
-                    break
+with st.chat_message(ASSISTANT_NAME):
+    assistant_msg = ""
+    assistant_response_area = st.empty()
+    for chunk in response:
+        if isinstance(chunk, MessageStartEvent):
+            continue
+        elif isinstance(chunk, MessageDoneEvent):
+            break
+        elif isinstance(chunk, MessageContentEvent):
+            assistant_msg += chunk.data.decode("utf-8")
             assistant_response_area.write(assistant_msg)
+        else:
+            logging.warning(f"Unexpected event type: {type(chunk)}")
 
     # セッションにチャットログを追加
     st.session_state["messages"].append({"role": "user", "content": user_msg})
