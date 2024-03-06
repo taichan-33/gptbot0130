@@ -1,39 +1,45 @@
 import logging
 from anthropic import Anthropic
-import time
 import streamlit as st
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     anthropic = Anthropic(api_key=anthropic_api_key)
     
-    # 過去のメッセージに現在のメッセージを追加
+    # Add the current message to the past messages
     past_messages = manage_past_messages(past_messages, user_msg, "")
     
     logging.info(f"Request to Anthropic API: {past_messages}")
     
     try:
-        # ストリーム出力用のプレースホルダーを作成
+        # Create a placeholder for the stream output
         response_placeholder = st.empty()
         
-        # レスポンスを生成
-        response_text = ""
-        stream = anthropic.messages.stream(
+        # Generate the response
+        with anthropic.messages.stream(
             model="claude-3-opus-20240229",
             messages=past_messages,
             max_tokens=1024,
-        )
+        ) as stream:
+            # Stream the response
+            response_text = ""
+            for text in stream.text_stream:
+                response_text += text
+                # Ensure only the text up to the first sentence-ending punctuation is included
+                if any(punct in text for punct in [".", "?", "!"]):
+                    end_index = min((text + response_text).find(punct) for punct in [".", "?", "!"] if punct in text)
+                    response_text = (text + response_text)[:end_index + 1]
+                    response_placeholder.markdown(response_text)
+                    break
         
-        for chunk in stream:
-            # レスポンスをストリーム出力
-            response_text += chunk.text
-            response_placeholder.markdown(response_text)
+        # Update the placeholder with only the first complete response
+        response_placeholder.markdown(response_text.strip())
         
         return response_text.strip()
     
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
         
-        # エラーが発生した場合、ダミーの応答を返す
+        # Return a dummy response in case of an error
         error_response = "申し訳ありません。メッセージの処理中にエラーが発生しました。もう一度お試しください。"
         return error_response
 
