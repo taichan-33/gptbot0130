@@ -105,6 +105,8 @@ client = anthropic.Anthropic(api_key=anthropic_api_key)
 
 
 def response_claude(user_msg: str, past_messages: list):
+    client = anthropic.Anthropic(api_key=anthropic_api_key)
+
     system_prompt = next(
         (msg["content"] for msg in past_messages if msg["role"] == "system"), None
     )
@@ -119,19 +121,18 @@ def response_claude(user_msg: str, past_messages: list):
 
     for message in filtered_messages:
         if message["content"].strip():
-            messages.append({"role": message["role"], "content": message["content"]})
+            messages.append(message)
 
     messages.append({"role": "user", "content": user_msg})
 
     logging.info(f"Request to Anthropic API: {messages}")
 
     try:
-        # APIリクエストを送信
-        response = client.messages.create(
+        response = client.completions.create(
             model="claude-3-opus-20240229",
             max_tokens=1000,
             temperature=0.0,
-            messages=messages,
+            prompt=messages,
         )
 
         logging.info(f"Response from Anthropic API: {response}")
@@ -141,10 +142,10 @@ def response_claude(user_msg: str, past_messages: list):
         error_message = (
             f"Error occurred while making request to Anthropic API: {str(e)}"
         )
+        error_traceback = traceback.format_exc()
         logging.error(error_message)
-        logging.error(f"Traceback: {traceback.format_exc()}")
-        if "st" in globals():
-            st.error(error_message)  # Streamlit UIでエラーを表示
+        logging.error(f"Traceback: {error_traceback}")
+        st.error(error_message)
         raise
 
 
