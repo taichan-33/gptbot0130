@@ -5,34 +5,23 @@ import streamlit as st
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     anthropic = Anthropic(api_key=anthropic_api_key)
-    
-    # 過去のメッセージに現在のメッセージを追加
     past_messages = manage_past_messages(past_messages, user_msg, "")
-    
     logging.info(f"Request to Anthropic API: {past_messages}")
-    
+
     try:
-        # ストリーム出力用のプレースホルダーを作成
         response_placeholder = st.empty()
-        
-        # レスポンスを生成
         with anthropic.messages.stream(
             model="claude-3-opus-20240229",
             messages=past_messages,
             max_tokens=1024,
         ) as stream:
-            # レスポンスをストリーム出力
             response_text = ""
             for text in stream.text_stream:
                 response_text += text
                 response_placeholder.markdown(response_text)
-        
         return response_text
-    
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
-        
-        # エラーが発生した場合、ダミーの応答を返す
         error_response = "申し訳ありません。メッセージの処理中にエラーが発生しました。もう一度お試しください。"
         return error_response
 
