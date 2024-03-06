@@ -3,7 +3,7 @@ from anthropic import Anthropic
 import time
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
-    anthropic = Anthropic(api_key=anthropic_api_key)
+    anthropic = Anthropic(api_key=anthropic_api_key, api_version="2023-06-01")
 
     # ユーザーとアシスタントのメッセージのみを残す
     filtered_messages = [
@@ -23,9 +23,6 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
             model="claude-3-opus-20240229",
             messages=messages,
             max_tokens=1024,
-            headers={
-                "anthropic-version": "2023-06-01"
-            }
         )
         response_text = response.content
         logging.info(f"Response from Anthropic API: {response_text}")
