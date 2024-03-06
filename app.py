@@ -102,23 +102,22 @@ def response_claude(user_msg: str, past_messages: list):
     ]
 
     # 過去のメッセージに現在のメッセージを追加
-    messages_to_send = []
+    messages_to_send = ""
+    if system_prompt:
+        messages_to_send += f"{system_prompt}\n\n"
+
     for message in filtered_messages:
         if message["content"].strip():  # 空でないコンテンツのみを追加
-            messages_to_send.append(
-                {"role": message["role"], "content": message["content"]}
-            )
+            role = message["role"].capitalize()
+            messages_to_send += f"{role}: {message['content']}\n\n"
 
-    messages_to_send.append({"role": "user", "content": user_msg})
-    messages_to_send.append(
-        {"role": "assistant", "content": ""}
-    )  # 最後に空のアシスタントメッセージを追加
+    messages_to_send += f"Human: {user_msg}\n\nAssistant: "
 
     logging.info(f"Request to Anthropic API: {messages_to_send}")
 
     try:
         # ClaudeLlmクラスのインスタンスを作成
-        claude = ClaudeLlm(anthropic, user_msg)
+        claude = ClaudeLlm(anthropic, messages_to_send)
 
         # レスポンスを生成
         response = claude.generate_responses("claude-3-opus-20240229")
