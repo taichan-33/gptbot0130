@@ -16,20 +16,15 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
         response_placeholder = st.empty()
         
         # レスポンスを生成
-        with anthropic.messages.stream(
+        response_text = ""
+        for chunk in anthropic.messages.stream(
             model="claude-3-opus-20240229",
             messages=past_messages,
             max_tokens=1024,
-        ) as stream:
+        ):
             # レスポンスをストリーム出力
-            response_text = ""
-            for text in stream.text_stream:
-                response_text += text
-                response_placeholder.markdown(response_text)
-                
-                # 最初の回答が生成された後、ループを終了
-                if text.endswith((".", "?", "!")):
-                    break
+            response_text += chunk
+            response_placeholder.markdown(response_text)
         
         return response_text.strip()
     
