@@ -96,31 +96,26 @@ def response_claude(user_msg: str, past_messages: list):
     ]
 
     # 過去のメッセージに現在のメッセージを追加
-    prompt = ""
+    messages = []
     if system_prompt:
-        prompt += f"{system_prompt}\n\n"
+        messages.append({"role": "system", "content": system_prompt})
 
     for message in filtered_messages:
         if message["content"].strip():  # 空でないコンテンツのみを追加
-            role = message["role"].capitalize()
-            prompt += f"{role}: {message['content']}\n\n"
+            messages.append(message)
 
-    prompt += f"Human: {user_msg}\n\nAssistant: "
+    messages.append({"role": "user", "content": user_msg})
 
-    logging.info(f"Request to Anthropic API: {prompt}")
+    logging.info(f"Request to Anthropic API: {messages}")
 
     try:
-        response = anthropic.completions.create(
-            prompt=prompt,
-            model="claude-3-opus-20240229",
-            max_tokens_to_sample=4096,
-            stream=True,
-        )
+        # ClaudeLlmクラスのインスタンスを作成
+        claude = ClaudeLlm(anthropic, messages)
 
+        # レスポンスを生成
         response_buffer = ""
-        for chunk in response:
-            if isinstance(chunk, dict) and "completion" in chunk:
-                response_buffer += chunk["completion"]
+        for chunk in claude.generate_responses("claude-3-opus-20240229"):
+            response_buffer += chunk
 
         logging.info(f"Response from Anthropic API: {response_buffer}")
         return response_buffer
