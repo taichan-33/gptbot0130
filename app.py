@@ -1,7 +1,7 @@
 import os
 import openai
 import streamlit as st
-from anthropic import Anthropic, events
+from anthropic import Anthropic
 
 # OpenAI APIキーの設定
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
