@@ -4,44 +4,29 @@ import streamlit as st
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     anthropic = Anthropic(api_key=anthropic_api_key)
-    
-    # Add the current message to the past messages
     past_messages = manage_past_messages(past_messages, user_msg, "")
-    
     logging.info(f"Request to Anthropic API: {past_messages}")
-    
+
     try:
-        # Create a placeholder for the stream output
         response_placeholder = st.empty()
         
-        # Generate the response
         with anthropic.messages.stream(
             model="claude-3-opus-20240229",
             messages=past_messages,
             max_tokens=1024,
         ) as stream:
-            # Stream the response
             response_text = ""
             for text in stream.text_stream:
-                # We assume the first complete sentence ends with a period, question mark, or exclamation mark.
-                if "." in text or "?" in text or "!" in text:
-                    # Find the end of the first sentence and break
-                    end_of_sentence = min([text.find(char) for char in '.?!' if char in text])
-                    response_text += text[:end_of_sentence + 1]
+                response_text += text
+                response_placeholder.markdown(response_text)
+                
+                if "." in response_text or "?" in response_text or "!" in response_text:
                     break
-                else:
-                    response_text += text
 
-        # Strip any extra whitespace from the response and update the placeholder
-        response_text = response_text.strip()
-        response_placeholder.markdown(f"> {response_text}")
-
-        return response_text
-    
+        return response_text.strip()
+        
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
-        
-        # Return a dummy response in case of an error
         error_response = "申し訳ありません。メッセージの処理中にエラーが発生しました。もう一度お試しください。"
         return error_response
 
