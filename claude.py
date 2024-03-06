@@ -23,16 +23,12 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
             model="claude-3-opus-20240229",
             messages=messages,
             max_tokens_to_sample=1024,
-            stream=True,
         )
 
-        response_buffer = ""
-        for chunk in response:
-            if isinstance(chunk, dict) and "text" in chunk:
-                response_buffer += chunk["text"]
+        response_text = response["completion"]
 
-        logging.info(f"Response from Anthropic API: {response_buffer}")
-        return response_buffer
+        logging.info(f"Response from Anthropic API: {response_text}")
+        return response_text
 
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
