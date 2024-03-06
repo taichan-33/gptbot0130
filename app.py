@@ -84,12 +84,11 @@ def response_claude(user_msg: str, past_messages: list):
             messages_to_send.append(
                 {"role": message["role"], "content": message["content"]}
             )
-            if message["role"] == "user":
-                messages_to_send.append(
-                    {"role": "assistant", "content": ""}
-                )  # ユーザーメッセージの後に空のアシスタントメッセージを追加
 
     messages_to_send.append({"role": "user", "content": user_msg})
+    messages_to_send.append(
+        {"role": "assistant", "content": ""}
+    )  # 最後に空のアシスタントメッセージを追加
 
     logging.info(f"Request to Anthropic API: {messages_to_send}")
 
