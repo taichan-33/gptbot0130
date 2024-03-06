@@ -36,9 +36,10 @@ ASSISTANT_NAME = "assistant"
 # OpenAIクライアントの初期化
 client = openai.ChatCompletion()
 
+
 def response_chatgpt(user_msg: str, past_messages: list):
     """ChatGPTのレスポンスを取得
-    
+
     Args:
         user_msg (str): ユーザーメッセージ。
         past_messages (list): 過去のメッセージリスト（ユーザーとアシスタントの両方）。
@@ -53,7 +54,9 @@ def response_chatgpt(user_msg: str, past_messages: list):
     )
     return response
 
+
 import logging
+
 
 def response_claude(user_msg: str, past_messages: list):
     """Claude-3のレスポンスを取得
@@ -65,13 +68,20 @@ def response_claude(user_msg: str, past_messages: list):
     anthropic = Anthropic(api_key=anthropic_api_key)
 
     # システムプロンプトを取り出す
-    system_prompt = next((msg["content"] for msg in past_messages if msg["role"] == "system"), None)
-    
+    system_prompt = next(
+        (msg["content"] for msg in past_messages if msg["role"] == "system"), None
+    )
+
     # ユーザーとアシスタントのメッセージのみを残す
-    filtered_messages = [msg for msg in past_messages if msg["role"] in ["user", "assistant"]]
+    filtered_messages = [
+        msg for msg in past_messages if msg["role"] in ["user", "assistant"]
+    ]
 
     # 過去のメッセージに現在のメッセージを追加
-    messages_to_send = [{"role": message["role"], "content": message["content"]} for message in filtered_messages]
+    messages_to_send = [
+        {"role": message["role"], "content": message["content"]}
+        for message in filtered_messages
+    ]
     messages_to_send.append({"role": "user", "content": user_msg})
 
     logging.info(f"Request to Anthropic API: {messages_to_send}")
@@ -91,6 +101,7 @@ def response_claude(user_msg: str, past_messages: list):
         raise
 
     return response
+
 
 # サイドバーの追加
 model = st.sidebar.selectbox("Select Model", ["chatgpt", "claude3 opus"])
@@ -123,19 +134,24 @@ if user_msg:
         response = response_claude(user_msg, st.session_state["messages"])
 
     # アシスタントのメッセージを表示
-with st.chat_message(ASSISTANT_NAME):
-    assistant_msg = ""
-    assistant_response_area = st.empty()
-    for chunk in response:
-        if isinstance(chunk, MessageStartEvent):
-            continue
-        elif isinstance(chunk, MessageDoneEvent):
-            break
-        elif isinstance(chunk, MessageContentEvent):
-            assistant_msg += chunk.data.decode("utf-8")
+    with st.chat_message(ASSISTANT_NAME):
+        assistant_msg = ""
+        assistant_response_area = st.empty()
+        for chunk in response:
+            if model == "chatgpt":
+                if chunk.choices[0].finish_reason is not None:
+                    break
+                assistant_msg += chunk.choices[0].delta.content
+            elif model == "claude3 opus":
+                if isinstance(chunk, MessageStartEvent):
+                    continue
+                elif isinstance(chunk, MessageDoneEvent):
+                    break
+                elif isinstance(chunk, MessageContentEvent):
+                    assistant_msg += chunk.data.decode("utf-8")
+                else:
+                    logging.warning(f"Unexpected event type: {type(chunk)}")
             assistant_response_area.write(assistant_msg)
-        else:
-            logging.warning(f"Unexpected event type: {type(chunk)}")
 
     # セッションにチャットログを追加
     st.session_state["messages"].append({"role": "user", "content": user_msg})
