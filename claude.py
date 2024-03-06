@@ -9,7 +9,7 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     filtered_messages = [
         {"role": msg["role"], "content": msg["content"]}
         for msg in past_messages
-        if msg["role"] in ["user", "assistant"]
+        if msg["role"] in ["user", "assistant"] and msg["content"].strip()
     ]
 
     # 過去のメッセージに現在のメッセージを追加
