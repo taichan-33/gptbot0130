@@ -13,23 +13,11 @@ class ClaudeLlm:
         output_tokens = 0
 
         try:
-            # user_msgがリストの場合、適切な形式に変換する
-            if isinstance(self.user_msg, list):
-                system_prompt = next((msg["content"] for msg in self.user_msg if msg["role"] == "system"), None)
-                user_prompts = [f"\n\nHuman: {msg['content']}\n\nAssistant:" for msg in self.user_msg if msg["role"] == "user"]
-
-                if system_prompt:
-                    prompt = f"{system_prompt}\n{' '.join(user_prompts)}"
-                else:
-                    prompt = ' '.join(user_prompts)
-            else:
-                prompt = f"\n\nHuman: {self.user_msg}\n\nAssistant:"
-
             response = self.anthropic.completions.create(
+                prompt=self.user_msg,
                 model=model,
-                prompt=prompt,
                 stop_sequences=[],
-                max_tokens_to_sample=4096,
+                max_tokens_to_sample=1024,
                 stream=True,
             )
 
@@ -45,7 +33,6 @@ class ClaudeLlm:
                 f"Error occurred while making request to Anthropic API: {str(e)}"
             )
             raise
-
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     anthropic = Anthropic(api_key=anthropic_api_key)
@@ -71,16 +58,16 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
 
     messages.append({"role": "user", "content": user_msg})
 
-    logging.info(f"Request to Anthropic API: {messages}")
+    formatted_messages = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
+
+    logging.info(f"Request to Anthropic API: {formatted_messages}")
 
     try:
         # ClaudeLlmクラスのインスタンスを作成
-        claude = ClaudeLlm(anthropic, messages)
+        claude = ClaudeLlm(anthropic, formatted_messages)
 
         # レスポンスを生成
-        response_buffer = ""
-        for chunk in claude.generate_responses("claude-3-opus-20240229"):
-            response_buffer += chunk
+        response_buffer = claude.generate_responses("claude-3-opus-20240229")
 
         logging.info(f"Response from Anthropic API: {response_buffer}")
         return response_buffer
