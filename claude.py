@@ -25,7 +25,7 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
             max_tokens=1024,
         )
 
-        response_text = response["completion"]
+        response_text = response.completion
 
         logging.info(f"Response from Anthropic API: {response_text}")
         return response_text
