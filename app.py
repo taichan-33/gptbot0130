@@ -2,6 +2,7 @@ import os
 import openai
 import streamlit as st
 from anthropic import Anthropic
+from claude_llm import ClaudeLlm  # ClaudeLlmクラスをインポート
 
 # OpenAI APIキーの設定
 openai.api_key = st.secrets["OpenAIAPI"]["openai_api_key"]
@@ -93,15 +94,13 @@ def response_claude(user_msg: str, past_messages: list):
     logging.info(f"Request to Anthropic API: {messages_to_send}")
 
     try:
-        # Claude-3にメッセージを送信し、レスポンスを取得
-        response = anthropic.messages.create(
-            max_tokens=2000,
-            messages=messages_to_send,
-            model="claude-3-opus-20240229",
-            stream=True,
-            system=system_prompt,  # トップレベルのsystemパラメータとしてシステムプロンプトを指定
-        )
+        # ClaudeLlmクラスのインスタンスを作成
+        claude = ClaudeLlm(anthropic, user_msg)
+
+        # レスポンスを生成
+        response = claude.generate_responses("claude-3-opus-20240229")
         logging.info(f"Response from Anthropic API: {response}")
+
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
         raise
@@ -149,20 +148,8 @@ if user_msg:
                     break
                 assistant_msg += chunk.choices[0].delta.content
             elif model == "claude3 opus":
-                if chunk.type in [
-                    "start",
-                    "message_stop",
-                    "content_block_delta",
-                    "content_block_stop",
-                    "message_delta",
-                ]:
-                    continue
-                elif chunk.type == "done":
-                    break
-                elif chunk.type == "content":
-                    assistant_msg += chunk.data.decode("utf-8")
-                else:
-                    logging.warning(f"Unexpected event type: {chunk.type}")
+                if isinstance(chunk, str):
+                    assistant_msg += chunk
             assistant_response_area.write(assistant_msg)
 
     # セッションにチャットログを追加
