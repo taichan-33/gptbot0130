@@ -12,17 +12,18 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     logging.info(f"Request to Anthropic API: {past_messages}")
     st.info(f"Request to Anthropic API: {past_messages}")  # Streamlitアプリケーションにログを表示
 
-    try:
+　　try:
         # レスポンスを生成
-        st.info("Generating response...")  # 処理開始のログを表示
+        st.info("Generating response...")
         response = anthropic.messages.create(
             model="claude-3-opus-20240229",
             messages=past_messages,
             max_tokens=1024,
         )
-        response_text = response.content
+        
+        response_text = response.content.text if isinstance(response.content, dict) and 'text' in response.content else str(response.content)
         logging.info(f"Response from Anthropic API: {response_text}")
-        st.info(f"Response from Anthropic API: {response_text}")  # Streamlitアプリケーションにログを表示
+        st.info(f"Response from Anthropic API: {response_text}")
         return response_text
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
