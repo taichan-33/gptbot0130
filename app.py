@@ -81,6 +81,7 @@ def response_claude(user_msg: str, past_messages: list):
     messages_to_send = [
         {"role": message["role"], "content": message["content"]}
         for message in filtered_messages
+        if message["content"].strip()  # 空でないコンテンツのみを追加
     ]
     messages_to_send.append({"role": "user", "content": user_msg})
 
