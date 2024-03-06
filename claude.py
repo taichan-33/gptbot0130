@@ -58,7 +58,12 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
 
     messages.append({"role": "user", "content": user_msg})
 
-    formatted_messages = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
+    formatted_messages = ""
+    if system_prompt:
+        formatted_messages += f"{system_prompt}\n\n"
+
+    formatted_messages += "\n\n".join([f"Human: {msg['content']}\nAssistant:" for msg in messages if msg["role"] == "user"])
+    formatted_messages += f"\n\nHuman: {user_msg}\nAssistant:"
 
     logging.info(f"Request to Anthropic API: {formatted_messages}")
 
