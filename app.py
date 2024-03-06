@@ -9,7 +9,6 @@ from anthropic.types.message_stream_event import (
     MessageStartEvent,
     MessageDeltaEvent,
     ContentBlockDeltaEvent,
-    MessageEndEvent,  # この行を追加
 )
 
 
@@ -62,7 +61,7 @@ class ClaudeLlm:
         ):
             if isinstance(chunk, ContentBlockDeltaEvent):
                 response_buffer += chunk.content
-            elif isinstance(chunk, MessageEndEvent):
+            elif isinstance(chunk, MessageDeltaEvent) and chunk.message is not None:
                 break
         return response_buffer
 
