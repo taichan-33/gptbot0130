@@ -96,21 +96,22 @@ def response_claude(user_msg: str, past_messages: list):
     ]
 
     # 過去のメッセージに現在のメッセージを追加
-    messages_to_send = []
+    prompt = ""
     if system_prompt:
-        messages_to_send.append({"role": "system", "content": system_prompt})
+        prompt += f"{system_prompt}\n\n"
 
     for message in filtered_messages:
         if message["content"].strip():  # 空でないコンテンツのみを追加
-            messages_to_send.append(message)
+            role = message["role"].capitalize()
+            prompt += f"{role}: {message['content']}\n\n"
 
-    messages_to_send.append({"role": "user", "content": user_msg})
+    prompt += f"Human: {user_msg}\n\nAssistant: "
 
-    logging.info(f"Request to Anthropic API: {messages_to_send}")
+    logging.info(f"Request to Anthropic API: {prompt}")
 
     try:
         response = anthropic.completions.create(
-            prompt=messages_to_send,
+            prompt=prompt,
             model="claude-3-opus-20240229",
             max_tokens_to_sample=4096,
             stream=True,
