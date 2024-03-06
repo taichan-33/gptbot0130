@@ -45,7 +45,6 @@ class ClaudeLlm:
     def __init__(self, anthropic, user_msg):
         self.anthropic = anthropic
         self.user_msg = user_msg
-        
 
     def generate_responses(self, model):
         start_time = time.time()
@@ -69,7 +68,9 @@ class ClaudeLlm:
             return response_buffer
 
         except Exception as e:
-            logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
+            logging.error(
+                f"Error occurred while making request to Anthropic API: {str(e)}"
+            )
             raise
 
 
@@ -134,6 +135,7 @@ def response_claude(user_msg: str, past_messages: list):
 
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
+        logging.error(f"Traceback: {traceback.format_exc()}")
         raise
 
 
