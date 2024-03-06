@@ -143,7 +143,13 @@ if user_msg:
                     break
                 assistant_msg += chunk.choices[0].delta.content
             elif model == "claude3 opus":
-                if chunk.type == "start":
+                if chunk.type in [
+                    "start",
+                    "message_stop",
+                    "content_block_delta",
+                    "content_block_stop",
+                    "message_delta",
+                ]:
                     continue
                 elif chunk.type == "done":
                     break
@@ -152,8 +158,6 @@ if user_msg:
                 else:
                     logging.warning(f"Unexpected event type: {chunk.type}")
             assistant_response_area.write(assistant_msg)
-
-    # ... 省略 ...
 
     # セッションにチャットログを追加
     st.session_state["messages"].append({"role": "user", "content": user_msg})
