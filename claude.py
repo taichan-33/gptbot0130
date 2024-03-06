@@ -25,9 +25,14 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
         
         # レスポンスをストリーム出力
         response_text = ""
-        for data in response:
-            response_text += data.completion
-            response_placeholder.markdown(response_text)
+        for event in response:
+            if isinstance(event, anthropic.StartConversationEvent):
+                continue
+            elif isinstance(event, anthropic.SegmentEvent):
+                response_text += event.text
+                response_placeholder.markdown(response_text)
+            elif isinstance(event, anthropic.ErrorEvent):
+                raise Exception(f"Error from Anthropic API: {event.error}")
         
         return response_text
     
