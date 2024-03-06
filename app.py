@@ -5,11 +5,6 @@ from anthropic import Anthropic
 import pandas as pd
 import time
 import anthropic
-from anthropic.types.message_stream_event import (
-    MessageStartEvent,
-    MessageDeltaEvent,
-    ContentBlockDeltaEvent,
-)
 
 
 # OpenAI APIキーの設定
@@ -52,17 +47,17 @@ class ClaudeLlm:
         self.user_msg = user_msg
 
     def generate_responses(self, model):
-        response_buffer = ""
-        for chunk in self.anthropic.completion_stream(
+        response = self.anthropic.complete(
             prompt=self.user_msg,
             stop_sequences=[anthropic.HUMAN_PROMPT],
             max_tokens_to_sample=4096,
             model=model,
-        ):
-            if isinstance(chunk, ContentBlockDeltaEvent):
-                response_buffer += chunk.content
-            elif isinstance(chunk, MessageDeltaEvent) and chunk.message is not None:
-                break
+            stream=True,
+        )
+        response_buffer = ""
+        for chunk in response:
+            if isinstance(chunk, str):
+                response_buffer += chunk
         return response_buffer
 
 
