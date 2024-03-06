@@ -1,45 +1,38 @@
 import logging
 from anthropic import Anthropic
+import time
 import streamlit as st
 
 def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
     anthropic = Anthropic(api_key=anthropic_api_key)
     
-    # Add the current message to the past messages
+    # 過去のメッセージに現在のメッセージを追加
     past_messages = manage_past_messages(past_messages, user_msg, "")
     
     logging.info(f"Request to Anthropic API: {past_messages}")
     
     try:
-        # Create a placeholder for the stream output
+        # ストリーム出力用のプレースホルダーを作成
         response_placeholder = st.empty()
         
-        # Generate the response
+        # レスポンスを生成
         with anthropic.messages.stream(
             model="claude-3-opus-20240229",
             messages=past_messages,
             max_tokens=1024,
         ) as stream:
-            # Stream the response
+            # レスポンスをストリーム出力
             response_text = ""
             for text in stream.text_stream:
                 response_text += text
-                # Ensure only the text up to the first sentence-ending punctuation is included
-                if any(punct in text for punct in [".", "?", "!"]):
-                    end_index = min((text + response_text).find(punct) for punct in [".", "?", "!"] if punct in text)
-                    response_text = (text + response_text)[:end_index + 1]
-                    response_placeholder.markdown(response_text)
-                    break
+                response_placeholder.markdown(response_text)
         
-        # Update the placeholder with only the first complete response
-        response_placeholder.markdown(response_text.strip())
-        
-        return response_text.strip()
+        return response_text
     
     except Exception as e:
         logging.error(f"Error occurred while making request to Anthropic API: {str(e)}")
         
-        # Return a dummy response in case of an error
+        # エラーが発生した場合、ダミーの応答を返す
         error_response = "申し訳ありません。メッセージの処理中にエラーが発生しました。もう一度お試しください。"
         return error_response
 
