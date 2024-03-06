@@ -9,6 +9,7 @@ from anthropic.types.message_stream_event import (
     MessageStartEvent,
     MessageDeltaEvent,
     ContentBlockDeltaEvent,
+    MessageEndEvent,  # この行を追加
 )
 
 
@@ -44,6 +45,26 @@ ASSISTANT_NAME = "assistant"
 
 # OpenAIクライアントの初期化
 client = openai.ChatCompletion()
+
+
+class ClaudeLlm:
+    def __init__(self, anthropic, user_msg):
+        self.anthropic = anthropic
+        self.user_msg = user_msg
+
+    def generate_responses(self, model):
+        response_buffer = ""
+        for chunk in self.anthropic.completion_stream(
+            prompt=self.user_msg,
+            stop_sequences=[anthropic.HUMAN_PROMPT],
+            max_tokens_to_sample=4096,
+            model=model,
+        ):
+            if isinstance(chunk, ContentBlockDeltaEvent):
+                response_buffer += chunk.content
+            elif isinstance(chunk, MessageEndEvent):
+                break
+        return response_buffer
 
 
 def response_chatgpt(user_msg: str, past_messages: list):
