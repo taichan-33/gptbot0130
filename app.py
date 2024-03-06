@@ -96,15 +96,19 @@ def response_chatgpt(user_msg: str, past_messages: list):
 import logging
 
 
-def response_claude(user_msg: str, past_messages: list):
-    # Assuming anthropic has been initialized correctly with the API key
-    anthropic = Anthropic(api_key=anthropic_api_key)
+import anthropic
+import logging
 
+# 以前の設定に従ってAnthropic APIキーを設定
+anthropic_api_key = "your_api_key_here"  # 実際のAPIキーに置き換えてください
+client = anthropic.Anthropic(api_key=anthropic_api_key)
+
+
+def response_claude(user_msg: str, past_messages: list):
     system_prompt = next(
         (msg["content"] for msg in past_messages if msg["role"] == "system"), None
     )
 
-    # Filter and prepare messages for the prompt
     filtered_messages = [
         msg for msg in past_messages if msg["role"] in ["user", "assistant"]
     ]
@@ -122,12 +126,12 @@ def response_claude(user_msg: str, past_messages: list):
     logging.info(f"Request to Anthropic API: {messages}")
 
     try:
-        # Correct method to create a message in the Anthropic API, adjusted according to typical API interaction patterns
-        response = anthropic.create_message(
+        # APIリクエストを送信
+        response = client.messages.create(
             model="claude-3-opus-20240229",
-            messages=messages,
             max_tokens=1000,
             temperature=0.0,
+            messages=messages,
         )
 
         logging.info(f"Response from Anthropic API: {response}")
@@ -140,7 +144,7 @@ def response_claude(user_msg: str, past_messages: list):
         logging.error(error_message)
         logging.error(f"Traceback: {traceback.format_exc()}")
         if "st" in globals():
-            st.error(error_message)  # Show error in Streamlit UI if 'st' is available
+            st.error(error_message)  # Streamlit UIでエラーを表示
         raise
 
 
