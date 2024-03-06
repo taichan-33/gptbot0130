@@ -36,10 +36,13 @@ def response_claude(user_msg: str, past_messages: list, anthropic_api_key: str):
 
 def manage_past_messages(past_messages: list, new_user_message: str, new_assistant_message: str):
     # 新しいユーザーメッセージとアシスタントの応答を追加
-    updated_messages = [msg for msg in past_messages if msg["role"] != "system"] + [{"role": "user", "content": new_user_message}]
+    updated_messages = [msg for msg in past_messages if msg["role"] != "system" and msg["content"].strip()]
+    
+    if new_user_message.strip():
+        updated_messages.append({"role": "user", "content": new_user_message})
     
     # アシスタントの応答が生成された場合、それを追加
-    if new_assistant_message:
+    if new_assistant_message.strip():
         updated_messages.append({"role": "assistant", "content": new_assistant_message})
     
     # 連続した "user" ロールのメッセージがある場合、古いメッセージを削除
