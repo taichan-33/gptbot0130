@@ -15,9 +15,15 @@ class ClaudeLlm:
         try:
             # user_msgがリストの場合、適切な形式に変換する
             if isinstance(self.user_msg, list):
-                prompt = "\n".join([f"{msg['role']}: {msg['content']}" for msg in self.user_msg])
+                system_prompt = next((msg["content"] for msg in self.user_msg if msg["role"] == "system"), None)
+                user_prompts = [f"\n\nHuman: {msg['content']}\n\nAssistant:" for msg in self.user_msg if msg["role"] == "user"]
+
+                if system_prompt:
+                    prompt = f"{system_prompt}\n{' '.join(user_prompts)}"
+                else:
+                    prompt = ' '.join(user_prompts)
             else:
-                prompt = self.user_msg
+                prompt = f"\n\nHuman: {self.user_msg}\n\nAssistant:"
 
             response = self.anthropic.completions.create(
                 model=model,
